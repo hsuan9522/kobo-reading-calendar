@@ -13,9 +13,8 @@ current_month = datetime.now().month
 def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
-def get_file():
-    json_file_path = './analytics.json'
-    with open(json_file_path, 'r', encoding="utf-8") as file:
+def get_file(path):
+    with open(path, 'r', encoding="utf-8") as file:
         data = json.load(file)
 
     # Filter data for the current year and month
@@ -34,7 +33,7 @@ draw = ImageDraw.Draw(image)
 
 # Load a font (you can change the font file path as needed)
 # font = ImageFont.load_default()
-font = ImageFont.truetype("simsun.tt")
+font = ImageFont.truetype("msjh.ttc")
 # Get the month's calendar as a list of lists
 cal_data = calendar.monthcalendar(current_year, current_month)
 
@@ -50,7 +49,7 @@ for i, day in enumerate(days_of_week):
     draw.text((x_start + i * cell_size, y_start - 30), day, font=font, fill="black")
 
 # Event data
-events_data = get_file()
+events_data = get_file('./example.json')
 print(events_data)
 # events_data = [
 #     {"Date": "2024-03-01", "Title": "A", "TotalMinutesRead": 38.1},
@@ -138,8 +137,7 @@ for week_num, week in enumerate(cal_data):
                     # print('單一事件', event['Title'])
                     tmp_i = next((key for key, value in day_map.items() if not value), None)
                     draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
-                    draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({event['TotalMinutesRead']} mins)",
-                            font=font, fill="black")
+                    draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({event['TotalMinutesRead']} mins)", font=font, fill="black")
                     tmp_position[event_title] = tmp_i
                     tmp_color[event_title] = event_block_color
                     day_map[tmp_i] = True

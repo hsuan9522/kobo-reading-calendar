@@ -49,9 +49,8 @@ def printBackground():
 def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
-def get_file():
-    json_file_path = './analytics.json'
-    with open(json_file_path, 'r', encoding="utf-8") as file:
+def get_file(path):
+    with open(path, 'r', encoding="utf-8") as file:
         data = json.load(file)
 
     # Filter data for the current year and month

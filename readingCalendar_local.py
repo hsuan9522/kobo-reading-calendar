@@ -83,6 +83,7 @@ tmp_event = []
 tmp_day = 0
 tmp_position = {}
 tmp_color = {}
+tmp_total_time = {}
 day_map = {0: False, 1: False, 2: False}
 
 for week_num, week in enumerate(cal_data):
@@ -104,6 +105,10 @@ for week_num, week in enumerate(cal_data):
 
             for i, event in enumerate(events_on_day):
                 event_block_color = light_gray_colors[(day_num % 4 + i) % 4]
+                event_title = event['Title']
+                # event_title = event['Title'].encode("utf-8").decode("latin1")
+                # print('--', event_title)
+
                 # print(day, tmp_day, tmp_event, event['Title'])
                 if i >= 3:
                     text = '+more'
@@ -111,37 +116,51 @@ for week_num, week in enumerate(cal_data):
                     # textdraw.textbbox((x+1,event_y), text, font=font)
                     # draw.rectangle([x + 1 + cell_size/2 , event_y + 3 * event_height, x + cell_size, event_y + (3 + 1) * event_height], fill=event_block_color, outline=None)
                     draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 3 * event_height), text, font=font, fill="black")
+                    tmp_total_time[event_title] += event['TotalMinutesRead']
                     break
-
-                # event_title = event['Title']
-                event_title = event['Title'].encode("utf-8").decode("latin1")
-                # print('--', event_title)
+                # print(tmp_day + 1 == day,event_title, tmp_event)
                 if tmp_day + 1 == day and event_title in tmp_event:
                     # print('連續事件', event_title)
+                    tmp_total_time[event_title] = round(tmp_total_time[event_title] + event['TotalMinutesRead'])
                     if event_title in tmp_position:
-                        save_y = tmp_position[event_title]
+                        title_pos, rect_pos = tmp_position[event_title]['title_pos'], tmp_position[event_title]['rect_pos']
+                        save_i = tmp_position[event_title]['i']
                         save_color = tmp_color[event_title]
-                        day_map[save_y] = True
-                        draw.rectangle([x , event_y + save_y * event_height, x + cell_size, event_y + (save_y + 1) * event_height], fill=save_color, outline=None)
+                        day_map[save_i] = True
+                        draw.rectangle([x , event_y + save_i * event_height, x + cell_size, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
+                        # 覆蓋掉原本的書名及時間
+                        time_format = "{:02d}:{:02d}:{:02d}".format(int(tmp_total_time[event_title] // 60), int(tmp_total_time[event_title] % 60), int((tmp_total_time[event_title] % 1) * 60))
+                        draw.rectangle(rect_pos, fill=save_color, outline=None)
+                        draw.text(title_pos, f"{event['Title']} ({time_format})", font=font, fill="black")
                     else:
+                        print('連續 else', event_title)
                         event_block_color = light_gray_colors[tmp_i]
                         tmp_i = next((key for key, value in day_map.items() if not value), None)
+                        time_format = "{:02d}:{:02d}:{:02d}".format(int(event['TotalMinutesRead'] // 60), int(event['TotalMinutesRead'] % 60), int((event['TotalMinutesRead'] % 1) * 60))
                         draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
-                        draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({event['TotalMinutesRead']} mins)",
-                            font=font, fill="black")
-                        tmp_position[event_title] = tmp_i
+                        draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({time_format})", font=font, fill="black")
+                        tmp_position[event_title] = {
+                            'i': tmp_i,
+                            'title_pos': (x + 2, event_y + 2 + tmp_i * event_height),
+                            'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                        }
                         tmp_color[event_title] = event_block_color
                         day_map[tmp_i] = True
 
                 else:
                     # print('單一事件', event['Title'])
                     tmp_i = next((key for key, value in day_map.items() if not value), None)
+                    time_format = "{:02d}:{:02d}:{:02d}".format(int(event['TotalMinutesRead'] // 60), int(event['TotalMinutesRead'] % 60), int((event['TotalMinutesRead'] % 1) * 60))
                     draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
-                    draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({event['TotalMinutesRead']} mins)", font=font, fill="black")
-                    tmp_position[event_title] = tmp_i
+                    draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event['Title']} ({time_format})", font=font, fill="black")
+                    tmp_position[event_title] = {
+                        'i': tmp_i,
+                        'title_pos': (x + 2, event_y + 2 + tmp_i * event_height),
+                        'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                    }
                     tmp_color[event_title] = event_block_color
                     day_map[tmp_i] = True
-
+                    tmp_total_time[event_title] = event['TotalMinutesRead']
 
         tmp_day = day
         seen_titles = set()

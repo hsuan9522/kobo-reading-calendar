@@ -62,39 +62,131 @@ def get_file(path):
 
     return filtered_data
 
+def draw_calendar(cal_data, events_data): 
+    tmp_event = []
+    tmp_day = 0
+    tmp_position = {}
+    tmp_color = {}
+    tmp_total_time = {}
+    day_map = {0: False, 1: False, 2: False, 3: False}
+
+    # Define cell size and starting position
+    cell_size = (screen_width - 40) // 7
+    x_start = 20
+    y_start = 200
+    light_gray_colors = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
+
+    # Draw the days of the week
+    days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    for i, day in enumerate(days_of_week):
+        draw.text((x_start + i * cell_size, y_start - 45), day, font=font, fill="black")
+
+    for week_num, week in enumerate(cal_data):
+        for day_num, day in enumerate(week):
+            x = x_start + day_num * cell_size
+            y = y_start + week_num * (cell_size + 20)
+
+            # Draw the day number with outline
+            if day != 0:
+                draw.text((x + 5, y + 3), str(day), font=font_md, fill="black")
+                draw.rectangle([x, y, x + cell_size, y + cell_size + 20], outline="black")
+
+            # Check if there are events on this day and draw them
+            events_on_day = [event for event in events_data if parse_date(event["Date"]).day == day]
+            # print(events_on_day)
+            if events_on_day:
+                event_height = 20
+                event_y = 20 + y
+
+                for i, event in enumerate(events_on_day):
+                    event_block_color = light_gray_colors[(day_num % 4 + i) % 4]
+                    event_title = event['Title']
+                    # event_title = event['Title'].encode("utf-8").decode("latin1")
+                    # print('--', event_title)
+
+                    # print(day, tmp_day, tmp_event, event['Title'])
+                    if i >= 4:
+                        text = '+more'
+                        text_width = 30
+                        # textdraw.textbbox((x+1,event_y), text, font=font)
+                        # draw.rectangle([x + 1 + cell_size/2 , event_y + 3 * event_height, x + cell_size, event_y + (3 + 1) * event_height], fill=event_block_color, outline=None)
+                        draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 3 * event_height), text, font=font_sm, fill="black")
+                        tmp_total_time[event_title] = event['TotalMinutesRead']
+                        break
+                    # print(tmp_day + 1 == day,event_title, tmp_event)
+                    if tmp_day + 1 == day and event_title in tmp_event:
+                        # print('連續事件', event_title)
+                        tmp_total_time[event_title] = tmp_total_time[event_title] + event['TotalMinutesRead']
+                        if event_title in tmp_position:
+                            title_pos, rect_pos = tmp_position[event_title]['title_pos'], tmp_position[event_title]['rect_pos']
+                            save_i = tmp_position[event_title]['i']
+                            save_color = tmp_color[event_title]
+                            day_map[save_i] = True
+                            draw.rectangle([x , event_y + save_i * event_height, x + cell_size, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
+                            # 覆蓋掉原本的書名及時間
+                            time_format = "{:02d}:{:02d}:{:02d}".format(int(tmp_total_time[event_title] // 60), int(tmp_total_time[event_title] % 60), int((tmp_total_time[event_title] % 1) * 60))
+                            draw.rectangle(rect_pos, fill=save_color, outline=None)
+                            draw.text(title_pos, f"{event['Title']} ({time_format})", font=font_sm, fill="black")
+                        else:
+                            # print('連續 else', event_title)
+                            event_block_color = light_gray_colors[tmp_i]
+                            tmp_i = next((key for key, value in day_map.items() if not value), None)
+                            time_format = "{:02d}:{:02d}:{:02d}".format(int(event['TotalMinutesRead'] // 60), int(event['TotalMinutesRead'] % 60), int((event['TotalMinutesRead'] % 1) * 60))
+                            draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
+                            draw.text((x + 2, event_y + tmp_i * event_height), f"{event['Title']} ({time_format})", font=font_sm, fill="black")
+                            tmp_position[event_title] = {
+                                'i': tmp_i,
+                                'title_pos': (x + 2, event_y + tmp_i * event_height),
+                                'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                            }
+                            tmp_color[event_title] = event_block_color
+                            day_map[tmp_i] = True
+
+                    else:
+                        # print('單一事件', event['Title'])
+                        tmp_i = next((key for key, value in day_map.items() if not value), None)
+                        time_format = "{:02d}:{:02d}:{:02d}".format(int(event['TotalMinutesRead'] // 60), int(event['TotalMinutesRead'] % 60), int((event['TotalMinutesRead'] % 1) * 60))
+                        draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
+                        draw.text((x + 2, event_y + tmp_i * event_height), f"{event['Title']} ({time_format})", font=font_sm, fill="black")
+                        tmp_position[event_title] = {
+                            'i': tmp_i,
+                            'title_pos': (x + 2, event_y + tmp_i * event_height),
+                            'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                        }
+                        tmp_color[event_title] = event_block_color
+                        day_map[tmp_i] = True
+                        tmp_total_time[event_title] = event['TotalMinutesRead']
+
+            tmp_day = day
+            seen_titles = set()
+            tmp_event = [title['Title'] for title in events_on_day if not (title['Title'] in seen_titles or seen_titles.add(title['Title']))]
+            day_map = {0: False, 1: False, 2: False, 3: False}
+            # print('------------')
+            # print(day, tmp_day,tmp_event)
+            # print('------------')
+
 
 # Or, the same but in a slightly more Pythonic approach ;).
 
 try:
     current_year = datetime.now().year
-    current_month = 2
+    current_month = datetime.now().month
 
-    # Create a new image with a white background
-    # width, height = 800, 600
+    
     image = Image.new("L", (screen_width, screen_height), color=white)
     draw = ImageDraw.Draw(image, "L")
-    # image = Image.new("L", (width, height), "white")
-    # draw = ImageDraw.Draw(image)
 
     # Load a font (you can change the font file path as needed)
     # font = ImageFont.load_default()
-    font = ImageFont.truetype("./msjh.ttc")
+    font = ImageFont.truetype("./msjh.ttc", 20)
+    font_md = ImageFont.truetype("./msjh.ttc", 13)
+    font_sm = ImageFont.truetype("./msjh.ttc", 15)
+
     # Get the month's calendar as a list of lists
     cal_data = calendar.monthcalendar(current_year, current_month)
 
-    # Define cell size and starting position
-    cell_size = 80
-    x_start = 20
-    y_start = 50
-    light_gray_colors = ['#9c9b9b', '#cccccc', '#bbbbbb', '#dddddd']
-
-    # Draw the days of the week
-    days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    for i, day in enumerate(days_of_week):
-        draw.text((x_start + i * cell_size, y_start - 30), day, font=font, fill="black")
-
     # Event data
-    events_data = get_file()
+    events_data = get_file('./analytics.json')
     # print(events_data)
     # events_data = [
     #     {"Date": "2024-03-01", "Title": "A", "TotalMinutesRead": 38.1},
@@ -123,86 +215,20 @@ try:
     #     {"Date": "2024-03-10", "Title": "K", "TotalMinutesRead": 271.7},
     # ]
 
-    #Draw the calendar days with outline
-    tmp_event = []
-    tmp_day = 0
-    tmp_position = {}
-    tmp_color = {}
-    day_map = {0: False, 1: False, 2: False}
-
-    for week_num, week in enumerate(cal_data):
-        for day_num, day in enumerate(week):
-            x = x_start + day_num * cell_size
-            y = y_start + week_num * cell_size
-
-            # Draw the day number with outline
-            if day != 0:
-                draw.text((x + 3, y + 4), str(day), font=font, fill="black")
-                draw.rectangle([x, y, x + cell_size, y + cell_size], outline="black")
-
-            # Check if there are events on this day and draw them
-            events_on_day = [event for event in events_data if parse_date(event["Date"]).day == day]
-            # print(events_on_day)
-            if events_on_day:
-                event_height = 15
-                event_y = 20 + y
-
-                for i, event in enumerate(events_on_day):
-                    event_block_color = light_gray_colors[(day_num % 4 + i) % 4]
-                    # print(day, tmp_day, tmp_event, event['Title'])
-                    if i >= 3:
-                        text = '+more'
-                        text_width = 30
-                        # textdraw.textbbox((x+1,event_y), text, font=font)
-                        # draw.rectangle([x + 1 + cell_size/2 , event_y + 3 * event_height, x + cell_size, event_y + (3 + 1) * event_height], fill=event_block_color, outline=None)
-                        draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 3 * event_height), text, font=font, fill="black")
-                        break
-
-                    event_title = event['Title'].encode("utf-8").decode("latin1")
-                    if tmp_day + 1 == day and event_title in tmp_event:
-                        # print('連續事件', event_title)
-                        if event_title in tmp_position:
-                            save_y = tmp_position[event_title]
-                            save_color = tmp_color[event_title]
-                            day_map[save_y] = True
-                            draw.rectangle([x , event_y + save_y * event_height, x + cell_size, event_y + (save_y + 1) * event_height], fill=save_color, outline=None)
-                        else:
-                            event_block_color = light_gray_colors[tmp_i]
-                            tmp_i = next((key for key, value in day_map.items() if not value), None)
-                            draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
-                            draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event_title} ({event['TotalMinutesRead']} mins)",
-                                font=font, fill="black")
-                            tmp_position[event_title] = tmp_i
-                            tmp_color[event_title] = event_block_color
-                            day_map[tmp_i] = True
-
-                    else:
-                        # print('單一事件', event['Title'])
-                        tmp_i = next((key for key, value in day_map.items() if not value), None)
-                        draw.rectangle([x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height], fill=event_block_color, outline=None)
-                        draw.text((x + 2, event_y + 2 + tmp_i * event_height), f"{event_title} ({event['TotalMinutesRead']} mins)",
-                                font=font, fill="black")
-                        tmp_position[event_title] = tmp_i
-                        tmp_color[event_title] = event_block_color
-                        day_map[tmp_i] = True
-
-            tmp_day = day
-            seen_titles = set()
-            tmp_event = [title['Title'] for title in events_on_day if not (title['Title'] in seen_titles or seen_titles.add(title['Title']))]
-            day_map = {0: False, 1: False, 2: False}
-            # print('------------')
-            # print(day, tmp_day,tmp_event)
-            # print('------------')
-
+    draw_calendar(cal_data, events_data)
     # Save the image
     image.save('calendar.png')
 
-	#
+	# FBInk
     raw_data = image.tobytes("raw")
     raw_len = len(raw_data)
     FBInk.fbink_print_raw_data(
         fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
     )
+    # fbink_cfg.is_flashing = True
+    # FBInk.fbink_refresh(fbfd, 0, 0, 0, 0, fbink_cfg)
+
+    # fbink_cfg.is_flashing = False
     # fbink_cfg.is_flashing = False
 
     # And a few other random examples...

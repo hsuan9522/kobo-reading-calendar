@@ -1,5 +1,6 @@
 #!/bin/sh
-
+FORCE_ANALYZE=true
+FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
 EXPORT="$FOLDER/analytics/analytics.json"
 SQLITE="${FOLDER}/sqlite3"
@@ -78,8 +79,8 @@ calculateReading() {
 .headers on
 .mode json
 
-SELECT 
-strftime('%Y-%m-%d', t1.Timestamp) AS Date,
+SELECT
+strftime('%Y-%m-%d', datetime(t1.Timestamp, 'localtime', '+08:00')) AS Date,
 COALESCE(json_extract(t1.Attributes, '$.title'), t2.Title) AS Title,
 CAST(printf('%.1f', SUM(json_extract(t1.Metrics, '$.SecondsRead')) / 60.0) AS REAL) AS TotalMinutesRead
 FROM AnalyticsEvents t1
@@ -98,11 +99,14 @@ last_running_analyze_time=$($SQLITE "$MY_DB" "SELECT IFNULL(CAST(Timestamp AS IN
 last_running_content_time=$($SQLITE "$MY_DB" "SELECT IFNULL(CAST(Timestamp AS INTEGER), 0) FROM TimeInfo WHERE Type = 'contentTime';")
 
 if [ -n "$last_running_analyze_time" ] || [ -n "$last_running_content_time" ]; then
+    current_date=$(date -u -d "@$current_time" "+%Y-%m-%d")
+
     if [ -n "$last_running_analyze_time" ]; then
         time_difference=$((current_time - last_running_analyze_time))
+        analyze_date=$(date -u -d "@$last_running_analyze_time" "+%Y-%m-%d")
 
-        # 與上次超過 6 hrs 就可以再做一次
-        if [ "$time_difference" -gt 21600 ]; then
+        # 與上次超過 2 hrs 或不同天，就可以再做一次
+        if [ "$time_difference" -gt 7200 ] || [ "$current_date" != "$analyze_date" ] || [ "$FORCE_ANALYZE" = true ]; then
             copyAnalyze
             calculateReading
             echo "Do analyze again..."
@@ -113,11 +117,11 @@ if [ -n "$last_running_analyze_time" ] || [ -n "$last_running_content_time" ]; t
 
     if [ -n "$last_running_content_time" ]; then
         time_difference=$((current_time - last_running_content_time))
+        content_date=$(date -u -d "@$last_running_content_time" "+%Y-%m-%d")
 
         # 與上次超過 12 hrs 就可以再做一次
-        if [ "$time_difference" -gt 43200 ]; then
+        if [ "$time_difference" -gt 43200 ] || [ "$current_date" != "$content_date" ] || [ "$FORCE_CONTENT" = true ]; then
             copyContent
-            
             echo "Do content refresh again..."
         else
             echo "Doesn't need to do content refresh."
@@ -125,8 +129,8 @@ if [ -n "$last_running_analyze_time" ] || [ -n "$last_running_content_time" ]; t
     fi
 
 else
-    copyAnalyze
     copyContent
+    copyAnalyze
     calculateReading
     echo "First time..."
 fi

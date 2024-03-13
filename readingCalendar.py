@@ -49,6 +49,8 @@ def get_time_format(time):
     return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
 def draw_calendar(cal_data, events_data): 
+    # Get the month's calendar as a list of lists
+    cal_data = calendar.monthcalendar(current_year, current_month)
     tmp_event = []
     tmp_day = 0
     tmp_position = {}
@@ -148,12 +150,13 @@ def draw_calendar(cal_data, events_data):
 
 
 try:
-    current_year = datetime.now().year
-    current_month = datetime.now().month
-
     # Create a new image with a white background    
     image = Image.new("L", (screen_width, screen_height), color="white")
     draw = ImageDraw.Draw(image, "L")
+
+    # set date
+    current_year = datetime.now().year
+    current_month = datetime.now().month
 
     # Load a font
     # font = ImageFont.load_default()
@@ -163,41 +166,13 @@ try:
 
     gray_palette = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
 
-    # Get the month's calendar as a list of lists
-    cal_data = calendar.monthcalendar(current_year, current_month)
-
     # Event data
     events_data = get_file('./data/analytics.json')
     # print(events_data)
-    # events_data = [
-    #     {"Date": "2024-03-01", "Title": "A", "TotalMinutesRead": 38.1},
-    #     {"Date": "2024-03-02", "Title": "A", "TotalMinutesRead": 53.8},
-    #     {"Date": "2024-03-03", "Title": "A", "TotalMinutesRead": 67.6},
-    #     {"Date": "2024-03-04", "Title": "A", "TotalMinutesRead": 126.4},
-    #     {"Date": "2024-03-05", "Title": "B", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-01", "Title": "B", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-01", "Title": "D", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-01", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-05", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-06", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-07", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-08", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-09", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "C", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-08", "Title": "E", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-09", "Title": "E", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "E", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-11", "Title": "E", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "F", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "G", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-11", "Title": "G", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-12", "Title": "G", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "K", "TotalMinutesRead": 271.7},
-    #     {"Date": "2024-03-10", "Title": "K", "TotalMinutesRead": 271.7},
-    # ]
 
     # Draw calendar
     draw_calendar(cal_data, events_data)
+
     # Save the image
     image.save('./image/calendar.png')
 
@@ -207,11 +182,6 @@ try:
     FBInk.fbink_print_raw_data(
         fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
     )
-    # fbink_cfg.is_flashing = True
-    # FBInk.fbink_refresh(fbfd, 0, 0, 0, 0, fbink_cfg)
-
-    # fbink_cfg.is_flashing = False
-    # fbink_cfg.is_flashing = False
 
     # And a few other random examples...
     """
@@ -219,20 +189,6 @@ try:
 	fbink_cfg.is_flashing = True
 	FBInk.fbink_refresh(fbfd, 0, 0, 0, 0, fbink_cfg)
 
-	fbink_cfg.is_flashing = False
-
-
-	# A (fairly useless) dump & restore cycle (with nightmode enabled for a free inversion)
-	dump = ffi.new("FBInkDump *")
-	FBInk.fbink_region_dump(fbfd, 350, 350, 250, 250, fbink_cfg, dump)
-
-	fbink_cfg.is_nightmode = True
-	fbink_cfg.is_flashing = True
-	FBInk.fbink_restore(fbfd, fbink_cfg, dump)
-
-	FBInk.fbink_free_dump_data(dump)
-
-	fbink_cfg.is_nightmode = False
 	fbink_cfg.is_flashing = False
 
 
@@ -249,17 +205,6 @@ try:
 
 	FBInk.fbink_free_ot_fonts()
 
-
-	# Another refresh example, this time with nightmode enabled (i.e., invert the current screen)
-	fbink_cfg.is_nightmode = True
-	fbink_cfg.is_flashing = True
-	FBInk.fbink_refresh(fbfd, 0, 0, 0, 0, fbink_cfg)
-
-	fbink_cfg.is_nightmode = False
-	fbink_cfg.is_flashing = False
-	# NOTE: We'd just need to disable nightmode to get back the original colors,
-	#       as is_nightmode doesn't actually affect the framebuffer content,
-	#       the inversion is done by the eInk controller on its own private buffer.
 	"""
 finally:
     FBInk.fbink_close(fbfd)

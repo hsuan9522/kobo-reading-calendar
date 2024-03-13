@@ -28,6 +28,8 @@ def get_time_format(time):
     return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
 def draw_calendar(cal_data, events_data): 
+    # Get the month's calendar as a list of lists
+    cal_data = calendar.monthcalendar(current_year, current_month)
     tmp_event = []
     tmp_day = 0
     tmp_position = {}
@@ -144,40 +146,12 @@ font_sm = ImageFont.truetype("./fonts/msjh.ttc", 15)
 
 gray_palette = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
 
-# Get the month's calendar as a list of lists
-cal_data = calendar.monthcalendar(current_year, current_month)
 # Event data
 events_data = get_file('./data/analytics.json')
 # print(events_data)
-# events_data = [
-#     {"Date": "2024-03-01", "Title": "A", "TotalMinutesRead": 38.1},
-#     {"Date": "2024-03-02", "Title": "A", "TotalMinutesRead": 53.8},
-#     {"Date": "2024-03-03", "Title": "A", "TotalMinutesRead": 67.6},
-#     {"Date": "2024-03-04", "Title": "A", "TotalMinutesRead": 126.4},
-#     {"Date": "2024-03-05", "Title": "B", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-01", "Title": "B", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-01", "Title": "D", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-01", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-05", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-06", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-07", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-08", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-09", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "C", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-08", "Title": "E", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-09", "Title": "E", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "E", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-11", "Title": "E", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "F", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "G", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-11", "Title": "G", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-12", "Title": "G", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "K", "TotalMinutesRead": 271.7},
-#     {"Date": "2024-03-10", "Title": "K", "TotalMinutesRead": 271.7},
-# ]
 
 #Draw the calendar
-draw_calendar(cal_data, events_data)
+draw_calendar(events_data)
 
 # Save the image
 image.save('./image/calendar.png')

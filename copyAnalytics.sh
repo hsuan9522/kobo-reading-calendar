@@ -2,7 +2,7 @@
 FORCE_ANALYZE=true
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
-EXPORT="$FOLDER/analytics/analytics.json"
+EXPORT="$FOLDER/analytics/data/analytics.json"
 SQLITE="${FOLDER}/sqlite3"
 
 LD_LIBRARY_PATH="${FOLDER}/lib:${LD_LIBRARY_PATH}"

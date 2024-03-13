@@ -157,9 +157,9 @@ try:
 
     # Load a font
     # font = ImageFont.load_default()
-    font = ImageFont.truetype("./msjh.ttc", 20)
-    font_md = ImageFont.truetype("./msjh.ttc", 13)
-    font_sm = ImageFont.truetype("./msjh.ttc", 15)
+    font = ImageFont.truetype("./fonts/msjh.ttc", 20)
+    font_md = ImageFont.truetype("./fonts/msjh.ttc", 13)
+    font_sm = ImageFont.truetype("./fonts/msjh.ttc", 15)
 
     gray_palette = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
 
@@ -167,7 +167,7 @@ try:
     cal_data = calendar.monthcalendar(current_year, current_month)
 
     # Event data
-    events_data = get_file('./analytics.json')
+    events_data = get_file('./data/analytics.json')
     # print(events_data)
     # events_data = [
     #     {"Date": "2024-03-01", "Title": "A", "TotalMinutesRead": 38.1},
@@ -199,7 +199,7 @@ try:
     # Draw calendar
     draw_calendar(cal_data, events_data)
     # Save the image
-    image.save('calendar.png')
+    image.save('./image/calendar.png')
 
 	# FBInk
     raw_data = image.tobytes("raw")

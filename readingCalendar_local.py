@@ -130,7 +130,7 @@ current_year = datetime.now().year
 current_month = 2
 
 screen_width = 800
-screen_height = 600
+screen_height = 1000
 
 # Create a new image with a white background
 image = Image.new("L", (screen_width, screen_height), "white")

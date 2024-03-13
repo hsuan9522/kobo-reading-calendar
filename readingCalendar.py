@@ -48,7 +48,7 @@ def get_file(path):
 def get_time_format(time):
     return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
-def draw_calendar(cal_data, events_data): 
+def draw_calendar(events_data): 
     # Get the month's calendar as a list of lists
     cal_data = calendar.monthcalendar(current_year, current_month)
     tmp_event = []
@@ -171,7 +171,7 @@ try:
     # print(events_data)
 
     # Draw calendar
-    draw_calendar(cal_data, events_data)
+    draw_calendar(events_data)
 
     # Save the image
     image.save('./image/calendar.png')

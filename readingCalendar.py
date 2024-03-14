@@ -103,16 +103,19 @@ def draw_calendar(events_data):
                     if tmp_day + 1 == day and event_title in tmp_event:
                         # print('連續事件', event_title)
                         tmp_total_time[event_title] = tmp_total_time[event_title] + event['TotalMinutesRead']
+                        
                         if event_title in tmp_position:
-                            title_pos, rect_pos = tmp_position[event_title]['title_pos'], tmp_position[event_title]['rect_pos']
                             save_i = tmp_position[event_title]['i']
                             save_color = tmp_color[event_title]
                             day_map[save_i] = True
                             draw.rectangle([x , event_y + save_i * event_height, x + cell_size, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
                             # 覆蓋掉原本的書名及時間
+                            title_pos = tmp_position[event_title]['title_pos']
                             time_format = get_time_format(tmp_total_time[event_title])
-                            draw.rectangle(rect_pos, fill=save_color, outline=None)
-                            draw.text(title_pos, f"{event_title} ({time_format})", font=font_sm, fill="black")
+                            text = f"{event_title} ({time_format})"
+                            left, top, right, bottom = draw.textbbox(title_pos, text, font=font_sm)
+                            draw.rectangle((left, top, right, bottom), fill=save_color)
+                            draw.text(title_pos, text, font=font_sm, fill="black")
                         else:
                             # 連續事件，但在上個日期被歸在 +more 裡
                             event_block_color = gray_palette[tmp_i]

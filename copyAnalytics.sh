@@ -80,12 +80,16 @@ calculateReading() {
 .mode json
 
 SELECT
-strftime('%Y-%m-%d', datetime(t1.Timestamp, 'localtime', '+08:00')) AS Date,
-COALESCE(json_extract(t1.Attributes, '$.title'), t2.Title) AS Title,
+strftime('%Y-%m-%d', datetime(t1.Timestamp, '+08:00')) AS Date,
+COALESCE(
+	json_extract(t1.Attributes, '$.title'),
+	(SELECT Title 
+	 FROM content
+	 WHERE ContentId = json_extract(t1.Attributes, '$.volumeid')
+	)
+) AS Title,
 CAST(printf('%.1f', SUM(json_extract(t1.Metrics, '$.SecondsRead')) / 60.0) AS REAL) AS TotalMinutesRead
 FROM AnalyticsEvents t1
-LEFT JOIN content t2 
-ON json_extract(t1.Attributes, '$.volumeid') = t2.ContentId -- Adjust the join condition
 WHERE t1.Type = 'LeaveContent'
 GROUP BY Date, Title
 HAVING TotalMinutesRead >= 1;

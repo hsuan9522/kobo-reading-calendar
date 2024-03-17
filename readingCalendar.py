@@ -83,6 +83,10 @@ def draw_calendar(events_data):
 
             # Check if there are events on this day and draw them
             events_on_day = [event for event in events_data if parse_date(event["Date"]).day == day]
+            # 把連續的閱讀往前排，不然會畫錯
+            common_titles = set(event['Title'] for event in events_on_day).intersection(tmp_event)
+            events_on_day.sort(key=lambda x: (x['Title'] not in common_titles, x['Title']))
+            
             # print(events_on_day)
             if events_on_day:
                 event_height = 20

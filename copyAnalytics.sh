@@ -60,7 +60,7 @@ copyContent() {
 
     INSERT OR IGNORE INTO target.content
     SELECT * FROM src.content AS src_content
-    WHERE ContentType = 6 AND isDownloaded = true
+    WHERE ContentType = 6 AND isDownloaded = 'true'
     AND src_content.___SyncTime > (
         SELECT Timestamp
         FROM target.TimeInfo
@@ -100,9 +100,10 @@ EOF
 
 current_time=$(date +"%s")
 last_running_analyze_time=$($SQLITE "$MY_DB" "SELECT IFNULL(CAST(Timestamp AS INTEGER), 0) FROM TimeInfo WHERE Type = 'analyzeTime';")
-last_running_content_time=$($SQLITE "$MY_DB" "SELECT IFNULL(CAST(Timestamp AS INTEGER), 0) FROM TimeInfo WHERE Type = 'contentTime';")
+new_content_time=$($SQLITE "$KOBO_DB" "SELECT MAX(___SyncTime) FROM content WHERE ContentType = 6 AND isDownloaded = 'true'");
+has_content_time=$($SQLITE "$MY_DB" "SELECT MAX(___SyncTime) FROM content");
 
-if [ -n "$last_running_analyze_time" ] || [ -n "$last_running_content_time" ]; then
+if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
     current_date=$(date -u -d "@$current_time" "+%Y-%m-%d")
 
     if [ -n "$last_running_analyze_time" ]; then
@@ -119,12 +120,10 @@ if [ -n "$last_running_analyze_time" ] || [ -n "$last_running_content_time" ]; t
         fi
     fi
 
-    if [ -n "$last_running_content_time" ]; then
-        time_difference=$((current_time - last_running_content_time))
-        content_date=$(date -u -d "@$last_running_content_time" "+%Y-%m-%d")
+    if [ -n "$has_content_time" ]; then
 
-        # 與上次超過 12 hrs 就可以再做一次
-        if [ "$time_difference" -gt 43200 ] || [ "$current_date" != "$content_date" ] || [ "$FORCE_CONTENT" = true ]; then
+        # 與最新的 content 時間不同才做
+        if [ "$new_content_time" ">" "$has_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
             copyContent
             echo "Do content refresh again..."
         else

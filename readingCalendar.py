@@ -61,6 +61,10 @@ def draw_calendar(events_data):
     tmp_total_time = {}
     day_map = {0: False, 1: False, 2: False, 3: False}
 
+    text = f'{current_year}/{current_month}'
+    left, top, right, bottom = draw.textbbox((0,0), text, font=font_xl)
+    draw.text((screen_width // 2 - (right - left) // 2, 40), text, font=font_xl, fill="black")
+
     # Define cell size and starting position
     cell_size = (screen_width - 40) // 7
     x_start = 20
@@ -69,8 +73,9 @@ def draw_calendar(events_data):
     # Draw the days of the week
     days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     for i, day in enumerate(days_of_week):
-        draw.text((x_start + i * cell_size, y_start - 45), day, font=font, fill="black")
+        draw.text((x_start + i * cell_size, y_start - 35), day, font=font, fill="black")
 
+    total_event_count = 0
     for week_num, week in enumerate(cal_data):
         for day_num, day in enumerate(week):
             x = x_start + day_num * cell_size
@@ -93,7 +98,7 @@ def draw_calendar(events_data):
                 event_y = 20 + y
 
                 for i, event in enumerate(events_on_day):
-                    event_block_color = gray_palette[(day_num % 4 + i) % 4]
+                    event_block_color = gray_palette[(week_num + total_event_count) % 4]
                     event_title = event['Title']
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
                     # print('--', event_title)
@@ -137,6 +142,7 @@ def draw_calendar(events_data):
                             draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill="black")
                             tmp_color[event_title] = event_block_color
                             day_map[tmp_i] = True
+                            total_event_count+=1
 
                     else:
                         # print('單一事件', event_title)
@@ -152,6 +158,7 @@ def draw_calendar(events_data):
                         tmp_color[event_title] = event_block_color
                         day_map[tmp_i] = True
                         tmp_total_time[event_title] = event['TotalMinutesRead']
+                        total_event_count+=1
 
             tmp_day = day
             seen_titles = set()
@@ -201,6 +208,7 @@ try:
     font_sm = ImageFont.truetype("./fonts/msjh.ttc", 13)
     font_md = ImageFont.truetype("./fonts/msjh.ttc", 15)
     font_lg = ImageFont.truetype("./fonts/msjh.ttc", 18)
+    font_xl = ImageFont.truetype("./fonts/msjh.ttc", 28)
 
     gray_palette = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
 

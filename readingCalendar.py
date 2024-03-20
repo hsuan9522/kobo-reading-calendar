@@ -99,6 +99,7 @@ def draw_calendar(events_data):
 
                 for i, event in enumerate(events_on_day):
                     event_block_color = gray_palette[(week_num + total_event_count) % 4]
+                    font_color = font_palette[(week_num + total_event_count) % 4]
                     event_title = event['Title']
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
                     # print('--', event_title)
@@ -119,6 +120,7 @@ def draw_calendar(events_data):
                         if event_title in tmp_position:
                             save_i = tmp_position[event_title]['i']
                             save_color = tmp_color[event_title]
+                            font_color = font_palette[gray_palette.index(save_color)] 
                             day_map[save_i] = True
                             draw.rectangle([x , event_y + save_i * event_height, x + cell_size, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
                             # 覆蓋掉原本的書名及時間
@@ -127,10 +129,11 @@ def draw_calendar(events_data):
                             text = f"{event_title} ({time_format})"
                             left, top, right, bottom = draw.textbbox(title_pos, text, font=font_md)
                             draw.rectangle((left, top, right, bottom), fill=save_color)
-                            draw.text(title_pos, text, font=font_md, fill="black")
+                            draw.text(title_pos, text, font=font_md, fill=font_color)
                         else:
                             # 連續事件，但在上個日期被歸在 +more 裡
                             event_block_color = gray_palette[tmp_i]
+                            font_color = font_palette[tmp_i]
                             tmp_i = next((key for key, value in day_map.items() if not value), None) # 找出還有的空位
                             time_format = get_time_format(event['TotalMinutesRead'])
                             tmp_position[event_title] = {
@@ -139,7 +142,7 @@ def draw_calendar(events_data):
                                 'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                             }
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                            draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill="black")
+                            draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill=font_color)
                             tmp_color[event_title] = event_block_color
                             day_map[tmp_i] = True
                             total_event_count+=1
@@ -154,7 +157,7 @@ def draw_calendar(events_data):
                             'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                         }
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                        draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill="black")
+                        draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill=font_color)
                         tmp_color[event_title] = event_block_color
                         day_map[tmp_i] = True
                         tmp_total_time[event_title] = event['TotalMinutesRead']
@@ -210,7 +213,8 @@ try:
     font_lg = ImageFont.truetype("./fonts/msjh.ttc", 18)
     font_xl = ImageFont.truetype("./fonts/msjh.ttc", 28)
 
-    gray_palette = ['#7C7979', '#A4A2A2', '#908E8E', '#C2C1C1']
+    gray_palette = ['#C4CCD3', '#495057', '#A4ADB6', '#757E86']
+    font_palette = ['black', '#E3E3E3', 'black', '#E3E3E3']
 
     # Event data
     events_data = get_file('./data/analytics.json')

@@ -128,7 +128,11 @@ def draw_calendar(events_data):
                             time_format = get_time_format(tmp_total_time[event_title])
                             text = f"{event_title} ({time_format})"
                             left, top, right, bottom = draw.textbbox(title_pos, text, font=font_md)
-                            draw.rectangle((left, top, right, bottom), fill=save_color)
+                            if left ==  20 + (cell_size * 6) + 2:
+                                draw.rectangle((left, top , left + cell_size - 3, bottom), fill=save_color)
+                                text = get_text(text, cell_size)
+                            else:
+                                draw.rectangle((left, top, right, bottom), fill=save_color)
                             draw.text(title_pos, text, font=font_md, fill=font_color)
                         else:
                             # 連續事件，但在上個日期被歸在 +more 裡
@@ -141,8 +145,10 @@ def draw_calendar(events_data):
                                 'title_pos': (x + 2, event_y + tmp_i * event_height),
                                 'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                             }
+                            text = f"{event_title} ({time_format})"
+                            text = get_text(text, cell_size)
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                            draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill=font_color)
+                            draw.text(tmp_position[event_title]['title_pos'], text, font=font_md, fill=font_color)
                             tmp_color[event_title] = event_block_color
                             day_map[tmp_i] = True
                             total_event_count+=1
@@ -154,10 +160,12 @@ def draw_calendar(events_data):
                         tmp_position[event_title] = {
                             'i': tmp_i,
                             'title_pos': (x + 2, event_y + tmp_i * event_height),
-                            'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                            'rect_pos': [x + 1 , event_y + tmp_i * event_height + 1, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                         }
+                        text = f"{event_title} ({time_format})"
+                        text = get_text(text, cell_size)
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                        draw.text(tmp_position[event_title]['title_pos'], f"{event_title} ({time_format})", font=font_md, fill=font_color)
+                        draw.text(tmp_position[event_title]['title_pos'], text, font=font_md, fill=font_color)
                         tmp_color[event_title] = event_block_color
                         day_map[tmp_i] = True
                         tmp_total_time[event_title] = event['TotalMinutesRead']
@@ -167,6 +175,17 @@ def draw_calendar(events_data):
             seen_titles = set()
             tmp_event = [title['Title'] for title in events_on_day if not (title['Title'] in seen_titles or seen_titles.add(title['Title']))]
             day_map = {0: False, 1: False, 2: False, 3: False}
+
+def get_text(string, cell_size):
+    i = 0
+    width = font_md.getlength('.') * 3
+    for char in string:
+        if width < cell_size - 8:
+            i += 1
+            width += font_md.getlength(char)
+
+    return string[:int(i)] + "..."
+
 
 def draw_detail(events_data):
     cal_data = calendar.monthcalendar(current_year, current_month)

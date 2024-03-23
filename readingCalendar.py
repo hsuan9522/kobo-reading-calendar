@@ -7,8 +7,8 @@ from datetime import datetime
 from _fbink import ffi, lib as FBInk
 from PIL import Image, ImageDraw, ImageFont
 import json
-import sys
 import calendar
+import time
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
@@ -216,6 +216,8 @@ def draw_detail(events_data):
 
 
 try:
+    start_time = time.time()
+
     # Create a new image with a white background    
     image = Image.new("L", (screen_width, screen_height), color="white")
     draw = ImageDraw.Draw(image, "L")
@@ -245,7 +247,9 @@ try:
 
     # Save the image
     image.save('./image/calendar.png')
-
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
 	# FBInk
     raw_data = image.tobytes("raw")
     raw_len = len(raw_data)

@@ -15,16 +15,13 @@ MY_DB="$FOLDER/analytics/AnalyticsEvent.sqlite"
 current_time=$(date +"%s")
 
 copyAnalyze() {
-    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(Timestamp) FROM AnalyticsEvents");
-
     $SQLITE $MY_DB <<EOF
 	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'analyzeTime';
     INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'analyzeTime' WHERE changes() = 0;
 
-    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'analyticsMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'analyticsMaxTime' WHERE changes() = 0;
+    UPDATE TimeInfo SET Timestamp = (SELECT MAX(Timestamp) FROM AnalyticsEvents) WHERE Type = 'analyticsMaxTime';
+    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT MAX(Timestamp), 'analyticsMaxTime' FROM AnalyticsEvents WHERE changes() = 0;
 
-    -- Copy Rows from Table A
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
 
@@ -37,7 +34,6 @@ copyAnalyze() {
         WHERE Type = 'analyticsMaxTime'
     );
 
-    -- Detach Databases
     DETACH DATABASE src;
     DETACH DATABASE target;
 EOF
@@ -45,16 +41,13 @@ EOF
 
 
 copyContent() {
-    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(___SyncTime) FROM content");
-
     $SQLITE $MY_DB <<EOF
 	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'contentTime';
     INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'contentTime' WHERE changes() = 0;
 
-    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'contentMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'contentMaxTime' WHERE changes() = 0;
+    UPDATE TimeInfo SET Timestamp = (SELECT MAX(___SyncTime) FROM content) WHERE Type = 'contentMaxTime';
+    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT MAX(___SyncTime), 'contentMaxTime' FROM content WHERE changes() = 0;
 
-    -- Copy Rows from Table B
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
 
@@ -67,7 +60,6 @@ copyContent() {
         WHERE Type = 'contentMaxTime'
     );
 
-    -- Detach Databases
     DETACH DATABASE src;
     DETACH DATABASE target;
 EOF
@@ -99,9 +91,15 @@ EOF
 }
 
 current_time=$(date +"%s")
-last_running_analyze_time=$($SQLITE "$MY_DB" "SELECT IFNULL(CAST(Timestamp AS INTEGER), 0) FROM TimeInfo WHERE Type = 'analyzeTime';")
+query_result=$($SQLITE "$MY_DB" "
+    SELECT
+        IFNULL(MAX(CASE WHEN Type = 'analyzeTime' THEN CAST(Timestamp AS INTEGER) END), 0),
+        MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END)
+    FROM TimeInfo;
+")
+last_running_analyze_time=$(echo "$query_result" | awk -F '|' '{print $1}')
+has_content_time=$(echo "$query_result" | awk -F '|' '{print $2}')
 new_content_time=$($SQLITE "$KOBO_DB" "SELECT MAX(___SyncTime) FROM content WHERE ContentType = 6 AND isDownloaded = 'true'");
-has_content_time=$($SQLITE "$MY_DB" "SELECT MAX(___SyncTime) FROM content");
 
 if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
     current_date=$(date -u -d "@$current_time" "+%Y-%m-%d")

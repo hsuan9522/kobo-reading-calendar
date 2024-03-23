@@ -12,9 +12,8 @@ import time
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
-print("Loaded FBInk {}".format(ffi.string(FBInk.fbink_version()).decode("ascii")))
+# print("Loaded FBInk {}".format(ffi.string(FBInk.fbink_version()).decode("ascii")))
 
-# And now we're good to go! Let's print "Hello World" in the center of the screen...
 # Setup the config...
 fbink_cfg = ffi.new("FBInkConfig *")
 fbink_cfg.is_centered = True
@@ -25,8 +24,30 @@ FBInk.fbink_init(fbfd, fbink_cfg)
 
 state = ffi.new("FBInkState *")
 FBInk.fbink_get_state(fbink_cfg, state)
+
 screen_width = state.screen_width
 screen_height = state.screen_height
+
+# Create a new image with a white background    
+image = Image.new("L", (screen_width, screen_height), color="white")
+draw = ImageDraw.Draw(image, "L")
+
+# set date
+current_year = datetime.now().year
+current_month = datetime.now().month
+cal_data = calendar.monthcalendar(current_year, current_month)
+
+# Load a font
+# font = ImageFont.load_default()
+font_path = "./fonts/msjh.ttc"
+font_sm = ImageFont.truetype(font_path, 13)
+font = ImageFont.truetype(font_path, 15)
+font_md = ImageFont.truetype(font_path, 18)
+font_lg = ImageFont.truetype(font_path, 20)
+font_xl = ImageFont.truetype(font_path, 28)
+
+gray_palette = ['#C4CCD3', '#495057', '#A4ADB6', '#757E86']
+font_palette = ['black', '#E3E3E3', 'black', '#E3E3E3']
 
 
 def parse_date(date_str):
@@ -53,7 +74,6 @@ def get_time_format(time, date_type = 1):
 
 def draw_calendar(events_data): 
     # Get the month's calendar as a list of lists
-    cal_data = calendar.monthcalendar(current_year, current_month)
     tmp_event = []
     tmp_day = 0
     tmp_position = {}
@@ -73,7 +93,7 @@ def draw_calendar(events_data):
     # Draw the days of the week
     days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     for i, day in enumerate(days_of_week):
-        draw.text((x_start + i * cell_size, y_start - 35), day, font=font, fill="black")
+        draw.text((x_start + i * cell_size, y_start - 35), day, font=font_lg, fill="black")
 
     total_event_count = 0
     for week_num, week in enumerate(cal_data):
@@ -108,8 +128,8 @@ def draw_calendar(events_data):
                     if i >= 4:
                         text = '+more'
                         text_width = 30
-                        # textdraw.textbbox((x+1,event_y), text, font=font)
-                        draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 4 * event_height), text, font=font_md, fill="black")
+                        # textdraw.textbbox((x+1,event_y), text, font=font_lg)
+                        draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 4 * event_height), text, font=font, fill="black")
                         tmp_total_time[event_title] = event['TotalMinutesRead']
                         break
 
@@ -127,13 +147,13 @@ def draw_calendar(events_data):
                             title_pos = tmp_position[event_title]['title_pos']
                             time_format = get_time_format(tmp_total_time[event_title])
                             text = f"{event_title} ({time_format})"
-                            left, top, right, bottom = draw.textbbox(title_pos, text, font=font_md)
+                            left, top, right, bottom = draw.textbbox(title_pos, text, font=font)
                             if left ==  20 + (cell_size * 6) + 2:
                                 draw.rectangle((left, top , left + cell_size - 3, bottom), fill=save_color)
                                 text = get_text(text, cell_size)
                             else:
                                 draw.rectangle((left, top, right, bottom), fill=save_color)
-                            draw.text(title_pos, text, font=font_md, fill=font_color)
+                            draw.text(title_pos, text, font=font, fill=font_color)
                         else:
                             # 連續事件，但在上個日期被歸在 +more 裡
                             event_block_color = gray_palette[tmp_i]
@@ -148,7 +168,7 @@ def draw_calendar(events_data):
                             text = f"{event_title} ({time_format})"
                             text = get_text(text, cell_size)
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                            draw.text(tmp_position[event_title]['title_pos'], text, font=font_md, fill=font_color)
+                            draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                             tmp_color[event_title] = event_block_color
                             day_map[tmp_i] = True
                             total_event_count+=1
@@ -165,7 +185,7 @@ def draw_calendar(events_data):
                         text = f"{event_title} ({time_format})"
                         text = get_text(text, cell_size)
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
-                        draw.text(tmp_position[event_title]['title_pos'], text, font=font_md, fill=font_color)
+                        draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                         tmp_color[event_title] = event_block_color
                         day_map[tmp_i] = True
                         tmp_total_time[event_title] = event['TotalMinutesRead']
@@ -178,17 +198,16 @@ def draw_calendar(events_data):
 
 def get_text(string, cell_size):
     i = 0
-    width = font_md.getlength('.') * 3
+    width = font.getlength('.') * 3
     for char in string:
         if width < cell_size - 8:
             i += 1
-            width += font_md.getlength(char)
+            width += font.getlength(char)
 
     return string[:int(i)] + "..."
 
 
 def draw_detail(events_data):
-    cal_data = calendar.monthcalendar(current_year, current_month)
     weeks = len(cal_data)
     x = 20
     y = 150 + ((screen_width - 40) // 7 + 20) * weeks  + 30
@@ -206,79 +225,41 @@ def draw_detail(events_data):
     for i, (title, total_minutes) in enumerate(total_minutes_by_title.items()):
         text = f"{title}: {get_time_format(total_minutes, 2)}"
         if i < max_line:
-            draw.text((x, y + i * title_height), text, font=font_lg, fill="black")
+            draw.text((x, y + i * title_height), text, font=font_md, fill="black")
         elif i < max_line * 2:
             new_i = (i + 1) % max_line - 1
             if new_i < 0:
                 new_i = max_line - 1
 
-            draw.text((x + half_width, y + new_i * title_height), text, font=font_lg, fill="black")
+            draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
 
-try:
-    start_time = time.time()
+def main():
+    try:
+        start_time = time.time()
 
-    # Create a new image with a white background    
-    image = Image.new("L", (screen_width, screen_height), color="white")
-    draw = ImageDraw.Draw(image, "L")
+        # Event data
+        events_data = get_file('./data/analytics.json')
+        # print(events_data)
 
-    # set date
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+        # Draw calendar
+        draw_calendar(events_data)
+        draw_detail(events_data)
 
-    # Load a font
-    # font = ImageFont.load_default()
-    font = ImageFont.truetype("./fonts/msjh.ttc", 20)
-    font_sm = ImageFont.truetype("./fonts/msjh.ttc", 13)
-    font_md = ImageFont.truetype("./fonts/msjh.ttc", 15)
-    font_lg = ImageFont.truetype("./fonts/msjh.ttc", 18)
-    font_xl = ImageFont.truetype("./fonts/msjh.ttc", 28)
+        # Save the image
+        image.save('./image/calendar.png')
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
+        # FBInk
+        raw_data = image.tobytes("raw")
+        raw_len = len(raw_data)
+        FBInk.fbink_print_raw_data(
+            fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
+        )
+        
+    finally:
+        FBInk.fbink_close(fbfd)
 
-    gray_palette = ['#C4CCD3', '#495057', '#A4ADB6', '#757E86']
-    font_palette = ['black', '#E3E3E3', 'black', '#E3E3E3']
-
-    # Event data
-    events_data = get_file('./data/analytics.json')
-    # print(events_data)
-
-    # Draw calendar
-    draw_calendar(events_data)
-    draw_detail(events_data)
-
-    # Save the image
-    image.save('./image/calendar.png')
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
-	# FBInk
-    raw_data = image.tobytes("raw")
-    raw_len = len(raw_data)
-    FBInk.fbink_print_raw_data(
-        fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
-    )
-
-    # And a few other random examples...
-    """
-	# A full-screen, flashing refresh
-	fbink_cfg.is_flashing = True
-	FBInk.fbink_refresh(fbfd, 0, 0, 0, 0, fbink_cfg)
-
-	fbink_cfg.is_flashing = False
-
-
-	# Fancy OT/TTF printing
-	FBInk.fbink_add_ot_font(b"Foo_Bold.ttf", FBInk.FNT_BOLD)
-	fbink_ot_cfg = ffi.new("FBInkOTConfig *")
-	fbink_ot_cfg.margins.top = 500
-	fbink_ot_cfg.margins.bottom = 600
-	fbink_ot_cfg.margins.left = 400
-	fbink_ot_cfg.margins.right = 50
-	fbink_ot_cfg.size_pt = 14.0
-	fbink_ot_cfg.is_formatted = True
-	FBInk.fbink_print_ot(fbfd, b"**Wheeeee!**", fbink_ot_cfg, fbink_cfg, ffi.NULL)
-
-	FBInk.fbink_free_ot_fonts()
-
-	"""
-finally:
-    FBInk.fbink_close(fbfd)
+if __name__ == "__main__":
+    main()

@@ -15,12 +15,14 @@ MY_DB="$FOLDER/analytics/AnalyticsEvent.sqlite"
 current_time=$(date +"%s")
 
 copyAnalyze() {
+    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(Timestamp) FROM AnalyticsEvents");
+
     $SQLITE $MY_DB <<EOF
 	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'analyzeTime';
     INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'analyzeTime' WHERE changes() = 0;
 
-    UPDATE TimeInfo SET Timestamp = (SELECT MAX(Timestamp) FROM AnalyticsEvents) WHERE Type = 'analyticsMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT MAX(Timestamp), 'analyticsMaxTime' FROM AnalyticsEvents WHERE changes() = 0;
+    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'analyticsMaxTime';
+    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'analyticsMaxTime' WHERE changes() = 0;
 
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
@@ -41,12 +43,14 @@ EOF
 
 
 copyContent() {
+    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(___SyncTime) FROM content");
+
     $SQLITE $MY_DB <<EOF
 	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'contentTime';
     INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'contentTime' WHERE changes() = 0;
 
-    UPDATE TimeInfo SET Timestamp = (SELECT MAX(___SyncTime) FROM content) WHERE Type = 'contentMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT MAX(___SyncTime), 'contentMaxTime' FROM content WHERE changes() = 0;
+    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'contentMaxTime';
+    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'contentMaxTime' WHERE changes() = 0;
 
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;

@@ -109,8 +109,8 @@ def draw_calendar(events_data):
             # Check if there are events on this day and draw them
             events_on_day = [event for event in events_data if parse_date(event["Date"]).day == day]
             # 把連續的閱讀往前排，不然會畫錯
-            common_titles = set(event['Title'] for event in events_on_day).intersection(tmp_event)
-            events_on_day.sort(key=lambda x: (x['Title'] not in common_titles, x['Title']))
+            common_titles = set(f"{event['Title']}{event['Author']}" for event in events_on_day).intersection(tmp_event)
+            events_on_day.sort(key=lambda x: (f"{x['Title']}{x['Author']}" not in common_titles, f"{x['Title']}{x['Author']}"))
             
             # print(events_on_day)
             if events_on_day:

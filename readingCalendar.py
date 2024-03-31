@@ -120,9 +120,9 @@ def draw_calendar(events_data):
                 for i, event in enumerate(events_on_day):
                     event_block_color = gray_palette[(week_num + total_event_count) % 4]
                     font_color = font_palette[(week_num + total_event_count) % 4]
-                    event_title = event['Title']
+                    event_book = event['Title']
+                    event_title = f"{event['Title']}{event['Author']}"
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
-                    # print('--', event_title)
 
                     # print(day, tmp_day, tmp_event, event['Title'])
                     if i >= 4:
@@ -146,7 +146,7 @@ def draw_calendar(events_data):
                             # 覆蓋掉原本的書名及時間
                             title_pos = tmp_position[event_title]['title_pos']
                             time_format = get_time_format(tmp_total_time[event_title])
-                            text = f"{event_title} ({time_format})"
+                            text = f"{event_book} ({time_format})"
                             left, top, right, bottom = draw.textbbox(title_pos, text, font=font)
                             if left ==  20 + (cell_size * 6) + 2:
                                 draw.rectangle((left, top , left + cell_size - 3, bottom), fill=save_color)
@@ -165,7 +165,7 @@ def draw_calendar(events_data):
                                 'title_pos': (x + 2, event_y + tmp_i * event_height),
                                 'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                             }
-                            text = f"{event_title} ({time_format})"
+                            text = f"{event_book} ({time_format})"
                             text = get_text(text, cell_size)
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                             draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
@@ -182,7 +182,7 @@ def draw_calendar(events_data):
                             'title_pos': (x + 2, event_y + tmp_i * event_height),
                             'rect_pos': [x + 1 , event_y + tmp_i * event_height + 1, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
                         }
-                        text = f"{event_title} ({time_format})"
+                        text = f"{event_book} ({time_format})"
                         text = get_text(text, cell_size)
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                         draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
@@ -193,7 +193,7 @@ def draw_calendar(events_data):
 
             tmp_day = day
             seen_titles = set()
-            tmp_event = [title['Title'] for title in events_on_day if not (title['Title'] in seen_titles or seen_titles.add(title['Title']))]
+            tmp_event = [f"{title['Title']}{title['Author']}" for title in events_on_day if not (f"{title['Title']}{title['Author']}" in seen_titles or seen_titles.add(f"{title['Title']}{title['Author']}"))]
             day_map = {0: False, 1: False, 2: False, 3: False}
 
 def get_text(string, cell_size):
@@ -217,13 +217,13 @@ def draw_detail(events_data):
 
     total_minutes_by_title = {}
     for item in events_data:
-        title = item['Title']
+        title = f"{item['Title']}+{item['Author']}"
         minutes_read = item['TotalMinutesRead']
         total_minutes_by_title[title] = total_minutes_by_title.get(title, 0) + minutes_read
 
     # Print the total minutes read for each title
     for i, (title, total_minutes) in enumerate(total_minutes_by_title.items()):
-        text = f"{title}: {get_time_format(total_minutes, 2)}"
+        text = f"{title.split('+')[0]}: {get_time_format(total_minutes, 2)}"
         if i < max_line:
             draw.text((x, y + i * title_height), text, font=font_md, fill="black")
         elif i < max_line * 2:

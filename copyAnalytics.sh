@@ -84,6 +84,13 @@ COALESCE(
 	 WHERE ContentId = json_extract(t1.Attributes, '$.volumeid')
 	)
 ) AS Title,
+COALESCE(
+	json_extract(t1.Attributes, '$.author'),
+	(SELECT Attribution 
+	 FROM content
+	 WHERE ContentId = json_extract(t1.Attributes, '$.volumeid')
+	)
+) AS Author,
 CAST(printf('%.1f', SUM(json_extract(t1.Metrics, '$.SecondsRead')) / 60.0) AS REAL) AS TotalMinutesRead
 FROM AnalyticsEvents t1
 WHERE t1.Type = 'LeaveContent'

@@ -15,6 +15,8 @@ import time
 # print("Loaded FBInk {}".format(ffi.string(FBInk.fbink_version()).decode("ascii")))
 
 # Setup the config...
+config = configparser.ConfigParser()
+config.read('config.ini')
 fbink_cfg = ffi.new("FBInkConfig *")
 fbink_cfg.is_centered = True
 fbink_cfg.is_halfway = True
@@ -39,15 +41,15 @@ cal_data = calendar.monthcalendar(current_year, current_month)
 
 # Load a font
 # font = ImageFont.load_default()
-font_path = "./fonts/msjh.ttc"
-font_sm = ImageFont.truetype(font_path, 13)
-font = ImageFont.truetype(font_path, 15)
-font_md = ImageFont.truetype(font_path, 18)
-font_lg = ImageFont.truetype(font_path, 20)
-font_xl = ImageFont.truetype(font_path, 28)
+font_path = f"./fonts/{config['Font']['font_family']}"
+font = ImageFont.truetype(font_path, int(config['Font']['font_base']))
+font_sm = ImageFont.truetype(font_path, int(config['Font']['font_sm']))
+font_md = ImageFont.truetype(font_path, int(config['Font']['font_md']))
+font_lg = ImageFont.truetype(font_path, int(config['Font']['font_lg']))
+font_xl = ImageFont.truetype(font_path, int(config['Font']['font_xl']))
 
-gray_palette = ['#C4CCD3', '#495057', '#A4ADB6', '#757E86']
-font_palette = ['black', '#E3E3E3', 'black', '#E3E3E3']
+gray_palette = [item.strip() for item in config['Color']['event_bg'].split(',')]
+font_palette = [item.strip() for item in config['Color']['event_tx'].split(',')]
 
 
 def parse_date(date_str):
@@ -125,11 +127,11 @@ def draw_calendar(events_data):
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
 
                     # print(day, tmp_day, tmp_event, event['Title'])
-                    if i >= 4:
+                    max_count = int(config['General']['max_event'])
+                    if i >= max_count:
                         text = '+more'
-                        text_width = 30
-                        # textdraw.textbbox((x+1,event_y), text, font=font_lg)
-                        draw.text((x + (cell_size - text_width) - 4, event_y + 2 + 4 * event_height), text, font=font, fill="black")
+                        left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+                        draw.text((x + (cell_size - (right - left)) - 4, event_y + 2 + 4 * event_height), text, font=font, fill="black")
                         tmp_total_time[event_title] = event['TotalMinutesRead']
                         break
 

@@ -1,16 +1,25 @@
 # kobo-reading-calendar
 嘗試寫出如 KOReader 一樣的閱讀日曆。
 
+### 資料夾結構
+```
+├── data // 執行 copyAnalytics.sh，存放匯出的資料
+│   ├── analytics.json // 計算同一天內單一本書的閱讀時間(分)
+│   ├── fake.json // 假資料
+│  
+├──  fonts // 字體資料夾
+│   ├── msjh.ttc // 中文字體，python 畫圖的時候會需要
+│  
+├── image // 
+│   ├── calendar.png // 輸出結果範例圖
+│ 
+├── AnalyticsEvent.sqlite
+├── copyAnalytics.sh // 拷貝 kobo 的 content、AnalyticsEvent 兩張表
+├── readingCalendar.sh // 執行 python
+├── readingCalendar.py // 畫日曆的主要檔案
+├── readingCalendar_local.py // for local
+```
 
-### 資料結構
-* **/data**
-    > 在跑 copyAnalytics.sh 的時候，會順便匯出需要的資料，是計算同一天內單一本書的閱讀時間(分)
-
-* **/fonts**
-    > 字型檔案， 要畫出中文字，裡面目前只選用微軟正黑體。
-
-* **/image**
-    > 畫完後輸出的日曆圖檔。
 
 * **AnalyticsEvent.sqlite**
     > 用來備份 KoboReader.sqlite 的資料，裡面有三張 table。
@@ -27,16 +36,8 @@
         存執行 copyAnalytics.sh 時間及上面兩張最後更新時間的 Table。
 
 
-* **copyAnalytics.sh**
-    > 因為在我的 Kobo DB 裡的 AnayticsEvent Table 存的資料會不定時消失（目前不知道原因），所以特別寫了這個，可以手動每次都複製裡面的特定資料，存在 AnalyticsEvent 的 DB 裡。
-
-* **readingCalendar.sh**
-    > 用來呼叫跑 python 的檔案
 
 
-* **readingCalendar_local.py**
-    > 在本地開發時用的，因為本地沒有裝 FBInk，不好測試。
 
-* **readingCalendar.py**
-    > 基本上於上面的沒有不同，只是多了 FBInk 的東西。
+
 

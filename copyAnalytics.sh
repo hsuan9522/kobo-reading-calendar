@@ -10,62 +10,74 @@ export LD_LIBRARY_PATH
 
 # Source and destination database file paths
 KOBO_DB="/mnt/onboard/.kobo/KoboReader.sqlite"
-MY_DB="$FOLDER/analytics/AnalyticsEvent.sqlite"
+MY_DB="$FOLDER/analytics/Analytics.sqlite"
 
 current_time=$(date +"%s")
 
+# Set locking mode to NORMAL
+locking_mode_sql="PRAGMA locking_mode = NORMAL;"
+
+# Set journal mode to WAL (Write-Ahead Logging)
+journal_mode_sql="PRAGMA journal_mode = WAL;"
+
+
 copyAnalyze() {
-    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(Timestamp) FROM AnalyticsEvents");
-
     $SQLITE $MY_DB <<EOF
-	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'analyzeTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'analyzeTime' WHERE changes() = 0;
-
-    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'analyticsMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'analyticsMaxTime' WHERE changes() = 0;
+    $locking_mode_sql
+    $journal_mode_sql
+    -- 寫入執行時間
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$current_time', 'analyzeTime');
 
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
 
-    INSERT OR IGNORE INTO target.AnalyticsEvents
-    SELECT * FROM src.AnalyticsEvents As src_event
-    WHERE Type IN ('OpenContent', 'LeaveContent')
-    AND src_event.Timestamp > (
+    INSERT OR IGNORE INTO target.Analytics
+    SELECT 
+        Id,
+        t1.Timestamp,
+        Attributes,
+        Metrics, 
+        strftime('%Y-%m-%d', datetime(t1.Timestamp, '+08:00')) AS Date,
+        COALESCE(json_extract(Attributes, '$.title'),t2.Title) AS Title,
+        COALESCE(json_extract(Attributes, '$.author'),t2.Author) AS Author,
+        json_extract(Metrics, '$.SecondsRead') As ReadingTime
+    FROM src.AnalyticsEvents As t1
+    LEFT JOIN Books As t2 ON t2.ContentId = json_extract(Attributes, '$.volumeid')
+    WHERE Type = 'LeaveContent'
+    AND t1.Timestamp > COALESCE((
         SELECT Timestamp
         FROM target.TimeInfo
         WHERE Type = 'analyticsMaxTime'
-    );
+    ), 0);
 
     DETACH DATABASE src;
     DETACH DATABASE target;
+
+    -- 寫入 analytics 最後一筆的時間
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES((SELECT MAX(Timestamp) FROM Analytics), 'analyticsMaxTime');
 EOF
 }
 
 
 copyContent() {
-    max_timestamp=$($SQLITE $MY_DB "SELECT MAX(___SyncTime) FROM content");
-
     $SQLITE $MY_DB <<EOF
-	UPDATE TimeInfo SET Timestamp = '$current_time' WHERE Type = 'contentTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$current_time', 'contentTime' WHERE changes() = 0;
-
-    UPDATE TimeInfo SET Timestamp = '$max_timestamp' WHERE Type = 'contentMaxTime';
-    INSERT OR REPLACE INTO TimeInfo (Timestamp, Type) SELECT '$max_timestamp', 'contentMaxTime' WHERE changes() = 0;
-
+    $locking_mode_sql
+    $journal_mode_sql
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
 
-    INSERT OR IGNORE INTO target.content
-    SELECT * FROM src.content AS src_content
-    WHERE ContentType = 6 AND isDownloaded = 'true'
-    AND src_content.___SyncTime > (
-        SELECT Timestamp
-        FROM target.TimeInfo
-        WHERE Type = 'contentMaxTime'
-    );
+    INSERT OR IGNORE INTO target.Books
+    SELECT ContentID, Title, Attribution As Author, ___SyncTime As Timestamp FROM src.content As t1
+    WHERE ContentType = 6
+    AND ContentID NOT LIKE 'file://%'
+    AND isDownloaded = 'true'
+    AND Timestamp > COALESCE((SELECT Timestamp FROM TimeInfo WHERE Type = 'contentMaxTime'), 0);
 
     DETACH DATABASE src;
     DETACH DATABASE target;
+
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$current_time', 'contentTime');
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES((SELECT MAX(Timestamp) FROM Books), 'contentMaxTime');
 EOF
 }
 
@@ -75,25 +87,9 @@ calculateReading() {
 .headers on
 .mode json
 
-SELECT
-strftime('%Y-%m-%d', datetime(t1.Timestamp, '+08:00')) AS Date,
-COALESCE(
-	json_extract(t1.Attributes, '$.title'),
-	(SELECT Title 
-	 FROM content
-	 WHERE ContentId = json_extract(t1.Attributes, '$.volumeid')
-	)
-) AS Title,
-COALESCE(
-	json_extract(t1.Attributes, '$.author'),
-	(SELECT Attribution 
-	 FROM content
-	 WHERE ContentId = json_extract(t1.Attributes, '$.volumeid')
-	)
-) AS Author,
-CAST(printf('%.1f', SUM(json_extract(t1.Metrics, '$.SecondsRead')) / 60.0) AS REAL) AS TotalMinutesRead
-FROM AnalyticsEvents t1
-WHERE t1.Type = 'LeaveContent'
+SELECT Date, Title, Author,
+CAST(printf('%.1f', SUM(ReadingTime) / 60.0) AS REAL) AS TotalMinutesRead
+FROM Analytics t1
 GROUP BY Date, Title
 HAVING TotalMinutesRead >= 1;
 
@@ -104,7 +100,7 @@ EOF
 current_time=$(date +"%s")
 query_result=$($SQLITE "$MY_DB" "
     SELECT
-        IFNULL(MAX(CASE WHEN Type = 'analyzeTime' THEN CAST(Timestamp AS INTEGER) END), 0),
+        IFNULL(MAX(CASE WHEN Type = 'analyzeTime' THEN CAST(Timestamp AS INTEGER) END), NULL),
         MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END)
     FROM TimeInfo;
 ")
@@ -114,6 +110,17 @@ new_content_time=$($SQLITE "$KOBO_DB" "SELECT MAX(___SyncTime) FROM content WHER
 
 if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
     current_date=$(date -u -d "@$current_time" "+%Y-%m-%d")
+
+    if [ -n "$has_content_time" ]; then
+
+        # 與最新的 content 時間不同才做
+        if [ "$new_content_time" ">" "$has_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
+            copyContent
+            echo "Do content refresh again..."
+        else
+            echo "Doesn't need to do content refresh."
+        fi
+    fi
 
     if [ -n "$last_running_analyze_time" ]; then
         time_difference=$((current_time - last_running_analyze_time))
@@ -126,17 +133,6 @@ if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
             echo "Do analyze again..."
         else
             echo "Doesn't need to do analyze."
-        fi
-    fi
-
-    if [ -n "$has_content_time" ]; then
-
-        # 與最新的 content 時間不同才做
-        if [ "$new_content_time" ">" "$has_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
-            copyContent
-            echo "Do content refresh again..."
-        else
-            echo "Doesn't need to do content refresh."
         fi
     fi
 

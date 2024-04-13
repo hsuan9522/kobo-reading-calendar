@@ -13,24 +13,24 @@
 ├── image // 
 │   ├── calendar.png // 輸出結果範例圖
 │ 
-├── AnalyticsEvent.sqlite
-├── copyAnalytics.sh // 拷貝 kobo 的 content、AnalyticsEvent 兩張表
+├── Analytics.sqlite
+├── copyAnalytics.sh // 截取 kobo 的 content、AnalyticsEvent 兩張表
 ├── readingCalendar.sh // 執行 python
 ├── readingCalendar.py // 畫日曆的主要檔案
 ├── readingCalendar_local.py // for local
+├── success.py // for nickelMenu chain_success
+├── config // nickelMenu's config
 ```
 
 
-* **AnalyticsEvent.sqlite**
-    > 用來備份 KoboReader.sqlite 的資料，裡面有三張 table。
+* **Analytics.sqlite**
+    > 用來分析 KoboReader.sqlite 的資料。
 
-        AnalyticsEvent: 
-        同於 KoboReader 裡同名的 table。
-        但只選了 Type = OpenContent 或 = LeaveContent 的資料。
+        Analytics: 
+        截取 KoboReader 裡 AnalyticsEvent table。
         
-        content:
-        同於 KoboReader 裡同名的 table。
-        但只選了 ContentType = 6 且 isDownloaded = true 的。
+        Books:
+        截取 KoboReader 裡 content table。
 
         TimeInfo:
         存執行 copyAnalytics.sh 時間及上面兩張最後更新時間的 Table。

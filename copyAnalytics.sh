@@ -1,5 +1,5 @@
 #!/bin/sh
-FORCE_ANALYZE=true
+FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
 EXPORT="$FOLDER/analytics/data/analytics.json"
@@ -12,7 +12,9 @@ export LD_LIBRARY_PATH
 KOBO_DB="/mnt/onboard/.kobo/KoboReader.sqlite"
 MY_DB="$FOLDER/analytics/Analytics.sqlite"
 
-current_time=$(date +"%s")
+LAST_MONTH=$(date -d "last month" +"%Y-%m")
+CURRENT_MONTH=$(date +"%Y-%m")
+CURRENT_TIMESTAMP=$(date +"%s")
 
 # Set locking mode to NORMAL
 locking_mode_sql="PRAGMA locking_mode = NORMAL;"
@@ -26,7 +28,7 @@ copyAnalyze() {
     $locking_mode_sql
     $journal_mode_sql
     -- 寫入執行時間
-    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$current_time', 'analyzeTime');
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$CURRENT_TIMESTAMP', 'analyzeTime');
 
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
@@ -76,20 +78,23 @@ copyContent() {
     DETACH DATABASE src;
     DETACH DATABASE target;
 
-    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$current_time', 'contentTime');
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$CURRENT_TIMESTAMP', 'contentTime');
     INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES((SELECT MAX(Timestamp) FROM Books), 'contentMaxTime');
 EOF
 }
 
 calculateReading() {
+    month="${1:-$CURRENT_MONTH}"
+    export_file_name="$EXPORT$month.json"
     # 計算每本書在同一天閱讀的時間
-    $SQLITE "$MY_DB" <<EOF > $EXPORT
+    $SQLITE "$MY_DB" <<EOF > $export_file_name
 .headers on
 .mode json
 
 SELECT Date, Title, Author,
 CAST(printf('%.1f', SUM(ReadingTime) / 60.0) AS REAL) AS TotalMinutesRead
 FROM Analytics t1
+WHERE strftime('%Y-%m', datetime(Date)) = '$month'
 GROUP BY Date, Title
 HAVING TotalMinutesRead >= 1;
 
@@ -101,10 +106,10 @@ read -r cs_content_time cs_analytics_time new_content_time new_analytics_time <<
 .headers off
 ATTACH DATABASE '$MY_DB' AS my;
 ATTACH DATABASE '$KOBO_DB' AS kobo;
-    SELECT
+SELECT 
     -- 存在自己 db 裡的最後時間
-    MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END) || '|' ||
-    MAX(CASE WHEN Type = 'analyticsMaxTime' THEN Timestamp END) AS my_data,
+    COALESCE(MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END), 0) || '|' ||
+    COALESCE(MAX(CASE WHEN Type = 'analyticsMaxTime' THEN Timestamp END), 0) AS my_data,
     -- Kobo 裡的最新資料
     (SELECT MAX(___SyncTime) FROM kobo.content WHERE ContentType = 6 AND ContentID NOT LIKE 'file://%' AND isDownloaded = 'true' ) || '|' ||
     (SELECT MAX(Timestamp) FROM kobo.AnalyticsEvents WHERE Type = 'LeaveContent') AS kobo_data
@@ -120,9 +125,9 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
         # 與最新的時間不同才做
         if [ "$new_content_time" ">" "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
             copyContent
-            echo "Do content refresh again..."
+            echo "Refresh Books map..."
         else
-            echo "Doesn't need to do content refresh."
+            echo "There are no new books."
         fi
     fi
 
@@ -131,9 +136,9 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
         if [ "$new_analytics_time" ">" "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
             copyAnalyze
             calculateReading
-            echo "Do analyze again..."
+            echo "Generating analytics file..."
         else
-            echo "Doesn't need to do analyze."
+            echo "No new analytics events."
         fi
     fi
 
@@ -142,4 +147,12 @@ else
     copyAnalyze
     calculateReading
     echo "First time..."
+fi
+
+last_month_file="$EXPORT$LAST_MONTH.json"
+if [ ! -f "$last_month_file" ]; then
+    calculateReading $LAST_MONTH
+    echo "Last month's file is generating..."
+else
+    echo "No need to generate last month's file."
 fi

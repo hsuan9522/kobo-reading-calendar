@@ -2,7 +2,7 @@
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
-EXPORT="$FOLDER/analytics/data/analytics.json"
+EXPORT="$FOLDER/analytics/data/"
 SQLITE="${FOLDER}/sqlite3"
 
 LD_LIBRARY_PATH="${FOLDER}/lib:${LD_LIBRARY_PATH}"
@@ -12,9 +12,16 @@ export LD_LIBRARY_PATH
 KOBO_DB="/mnt/onboard/.kobo/KoboReader.sqlite"
 MY_DB="$FOLDER/analytics/Analytics.sqlite"
 
-LAST_MONTH=$(date -d "last month" +"%Y-%m")
 CURRENT_MONTH=$(date +"%Y-%m")
 CURRENT_TIMESTAMP=$(date +"%s")
+
+tmp_year=${CURRENT_MONTH%-*}
+tmp_month=$((${CURRENT_MONTH#*-} - 1)) 
+if [ $tmp_month -eq 0 ]; then
+    tmp_month=12
+    tmp_year=$((tmp_year - 1))
+fi
+LAST_MONTH=$(printf "%d-%02d" $tmp_year $tmp_month)
 
 # Set locking mode to NORMAL
 locking_mode_sql="PRAGMA locking_mode = NORMAL;"
@@ -102,22 +109,28 @@ HAVING TotalMinutesRead >= 1;
 EOF
 }
 
-read -r cs_content_time cs_analytics_time new_content_time new_analytics_time <<< $($SQLITE <<EOF | awk -F'|' '{print $1,$2,$3,$4}'
+$SQLITE <<EOF > /tmp/sqlite_output.txt
 .headers off
 ATTACH DATABASE '$MY_DB' AS my;
 ATTACH DATABASE '$KOBO_DB' AS kobo;
 SELECT 
     -- 存在自己 db 裡的最後時間
-    COALESCE(MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END), 0) || '|' ||
-    COALESCE(MAX(CASE WHEN Type = 'analyticsMaxTime' THEN Timestamp END), 0) AS my_data,
+    COALESCE(MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END), 0),
+    COALESCE(MAX(CASE WHEN Type = 'analyticsMaxTime' THEN Timestamp END), 0),
     -- Kobo 裡的最新資料
-    (SELECT MAX(___SyncTime) FROM kobo.content WHERE ContentType = 6 AND ContentID NOT LIKE 'file://%' AND isDownloaded = 'true' ) || '|' ||
+    (SELECT MAX(___SyncTime) FROM kobo.content WHERE ContentType = 6 AND ContentID NOT LIKE 'file://%' AND isDownloaded = 'true' ),
     (SELECT MAX(Timestamp) FROM kobo.AnalyticsEvents WHERE Type = 'LeaveContent') AS kobo_data
 FROM my.TimeInfo;
 DETACH DATABASE my;
 DETACH DATABASE kobo;
 EOF
-)
+
+# Read the output from the temporary file into variables
+while IFS='|' read -r cs_content_time cs_analytics_time new_content_time new_analytics_time; do
+    break  # Break after the first line
+done < /tmp/sqlite_output.txt
+# Remove the temporary file
+rm /tmp/sqlite_output.txt
 
 if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
     if [ -n "$cs_content_time" ]; then

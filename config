@@ -1,9 +1,12 @@
-menu_item   :main   :前月日曆   :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
+menu_item   :main   :前月日曆   :cmd_spawn      :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
+    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
 menu_item   :main   :當月日曆    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
     chain_success   :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py
     chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
 
 menu_item   :reader   :分析     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
     chain_success   :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py
-menu_item   :reader   :前月日曆     :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
-menu_item   :reader   :當月日曆     :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
+menu_item   :reader   :前月日曆     :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
+    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
+menu_item   :reader   :當月日曆     :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
+    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh

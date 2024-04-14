@@ -17,7 +17,7 @@ fbfd = FBInk.fbink_open()
 def main():
     try:
         FBInk.fbink_init(fbfd, fbink_cfg)
-        FBInk.fbink_print(fbfd, b"Success!!", fbink_cfg)
+        FBInk.fbink_print(fbfd, b"Generating...", fbink_cfg)
     finally:
         FBInk.fbink_close(fbfd)
 

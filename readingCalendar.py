@@ -53,10 +53,16 @@ def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 def get_file(path):
-    with open(path, 'r', encoding="utf-8") as file:
-        data = json.load(file)
+    try:
+        with open(path, 'r', encoding="utf-8") as file:
+            data = json.load(file)
 
-    return data
+        return data
+    except:
+        fbink_cfg.is_halfway = False
+        fbink_cfg.row = -2
+        FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
+        exit(1)
 
 def get_time_format(time, date_type = 1):
     if date_type == 2:

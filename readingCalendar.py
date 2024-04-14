@@ -10,6 +10,7 @@ import configparser
 import json
 import calendar
 import time
+import sys
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
@@ -35,13 +36,6 @@ screen_height = state.screen_height
 image = Image.new("L", (screen_width, screen_height), color="white")
 draw = ImageDraw.Draw(image, "L")
 
-# set date
-current_date = datetime.now()
-current_year = current_date.year
-current_month = current_date.month
-current_day = current_date.day
-cal_data = calendar.monthcalendar(current_year, current_month)
-
 # Load a font
 # font = ImageFont.load_default()
 font_path = f"./fonts/{config['Font']['font_family']}"
@@ -62,14 +56,7 @@ def get_file(path):
     with open(path, 'r', encoding="utf-8") as file:
         data = json.load(file)
 
-    # Filter data for the current year and month
-    filtered_data = [
-        entry for entry in data
-        if datetime.strptime(entry["Date"], "%Y-%m-%d").year == current_year
-        and datetime.strptime(entry["Date"], "%Y-%m-%d").month == current_month
-    ]
-
-    return filtered_data
+    return data
 
 def get_time_format(time, date_type = 1):
     if date_type == 2:
@@ -77,7 +64,11 @@ def get_time_format(time, date_type = 1):
     else:
         return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
-def draw_calendar(events_data): 
+def draw_calendar(events_data, date):
+    current_year = date.year
+    current_month = date.month
+    current_day = date.day
+    cal_data = calendar.monthcalendar(current_year, current_month)
     # Get the month's calendar as a list of lists
     tmp_event = []
     tmp_day = 0
@@ -108,7 +99,7 @@ def draw_calendar(events_data):
 
             # Draw the day number with outline
             if day != 0:
-                if current_day == day:
+                if current_day == day and datetime.now().month == current_month:
                     draw.ellipse((x + 3, y + 2, x + 21, y + 20), fill='#bdbebf')
                 draw.text((x + 5, y + 3), str(day), font=font_sm, fill="black")
                 draw.rectangle([x, y, x + cell_size, y + cell_size + 20], outline="black")
@@ -214,7 +205,8 @@ def get_text(string, cell_size):
     return string[:int(i)] + "..."
 
 
-def draw_detail(events_data):
+def draw_detail(events_data, date):
+    cal_data = calendar.monthcalendar(date.year, date.month)
     weeks = len(cal_data)
     x = 20
     y = 150 + ((screen_width - 40) // 7 + 20) * weeks  + 30
@@ -245,13 +237,27 @@ def main():
     try:
         start_time = time.time()
 
+        # set date
+        date = datetime.now()
+        year = date.year
+        month = date.month
+        
+        events_data = ''
+        if len(sys.argv) > 1:
+            month -= 1
+            if month == 0:
+                year -= 1
+                month = 12
+            date = datetime(year, month, 1)
+
         # Event data
-        events_data = get_file('./data/analytics.json')
+        file_name = date.strftime('%Y-%m')
+        events_data = get_file(f'./data/{file_name}.json')
         # print(events_data)
 
         # Draw calendar
-        draw_calendar(events_data)
-        draw_detail(events_data)
+        draw_calendar(events_data, date)
+        draw_detail(events_data, date)
 
         # Save the image
         image.save('./image/calendar.png')

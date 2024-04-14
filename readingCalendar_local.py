@@ -3,7 +3,7 @@
  
 from PIL import Image, ImageDraw, ImageFont
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import configparser
 import sys

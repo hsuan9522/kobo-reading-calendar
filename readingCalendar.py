@@ -6,6 +6,7 @@ from __future__ import print_function
 from datetime import datetime
 from _fbink import ffi, lib as FBInk
 from PIL import Image, ImageDraw, ImageFont
+import configparser
 import json
 import calendar
 import time

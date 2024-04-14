@@ -18,8 +18,11 @@ screen_height = 1000
 image = Image.new("L", (screen_width, screen_height), "white")
 draw = ImageDraw.Draw(image)
 
-current_year = datetime.now().year
+# set date
+current_date = datetime.now()
+current_year = current_date.year
 current_month = 2
+current_day = current_date.day
 cal_data = calendar.monthcalendar(current_year, current_month)
 
 # Load a font
@@ -86,6 +89,8 @@ def draw_calendar(events_data):
 
             # Draw the day number with outline
             if day != 0:
+                if current_day == day:
+                    draw.ellipse((x + 3, y + 2, x + 21, y + 20), fill='#bdbebf')
                 draw.text((x + 5, y + 3), str(day), font=font_sm, fill="black")
                 draw.rectangle([x, y, x + cell_size, y + cell_size + 20], outline="black")
 
@@ -98,7 +103,7 @@ def draw_calendar(events_data):
             # print(events_on_day)
             if events_on_day:
                 event_height = 20
-                event_y = 20 + y
+                event_y = 20 + y + 2
 
                 for i, event in enumerate(events_on_day):
                     event_block_color = gray_palette[(week_num + total_event_count) % 4]

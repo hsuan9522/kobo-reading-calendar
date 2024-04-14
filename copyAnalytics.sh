@@ -97,24 +97,28 @@ HAVING TotalMinutesRead >= 1;
 EOF
 }
 
-current_time=$(date +"%s")
-query_result=$($SQLITE "$MY_DB" "
+read -r cs_content_time cs_analytics_time new_content_time new_analytics_time <<< $($SQLITE <<EOF | awk -F'|' '{print $1,$2,$3,$4}'
+.headers off
+ATTACH DATABASE '$MY_DB' AS my;
+ATTACH DATABASE '$KOBO_DB' AS kobo;
     SELECT
-        IFNULL(MAX(CASE WHEN Type = 'analyzeTime' THEN CAST(Timestamp AS INTEGER) END), NULL),
-        MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END)
-    FROM TimeInfo;
-")
-last_running_analyze_time=$(echo "$query_result" | awk -F '|' '{print $1}')
-has_content_time=$(echo "$query_result" | awk -F '|' '{print $2}')
-new_content_time=$($SQLITE "$KOBO_DB" "SELECT MAX(___SyncTime) FROM content WHERE ContentType = 6 AND isDownloaded = 'true'");
+    -- 存在自己 db 裡的最後時間
+    MAX(CASE WHEN Type = 'contentMaxTime' THEN Timestamp END) || '|' ||
+    MAX(CASE WHEN Type = 'analyticsMaxTime' THEN Timestamp END) AS my_data,
+    -- Kobo 裡的最新資料
+    (SELECT MAX(___SyncTime) FROM kobo.content WHERE ContentType = 6 AND ContentID NOT LIKE 'file://%' AND isDownloaded = 'true' ) || '|' ||
+    (SELECT MAX(Timestamp) FROM kobo.AnalyticsEvents WHERE Type = 'LeaveContent') AS kobo_data
+FROM my.TimeInfo;
+DETACH DATABASE my;
+DETACH DATABASE kobo;
+EOF
+)
 
-if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
-    current_date=$(date -u -d "@$current_time" "+%Y-%m-%d")
+if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
+    if [ -n "$cs_content_time" ]; then
 
-    if [ -n "$has_content_time" ]; then
-
-        # 與最新的 content 時間不同才做
-        if [ "$new_content_time" ">" "$has_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
+        # 與最新的時間不同才做
+        if [ "$new_content_time" ">" "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
             copyContent
             echo "Do content refresh again..."
         else
@@ -122,12 +126,9 @@ if [ -n "$last_running_analyze_time" ] || [ -n "$has_content_time" ]; then
         fi
     fi
 
-    if [ -n "$last_running_analyze_time" ]; then
-        time_difference=$((current_time - last_running_analyze_time))
-        analyze_date=$(date -u -d "@$last_running_analyze_time" "+%Y-%m-%d")
-
-        # 與上次超過 2 hrs 或不同天，就可以再做一次
-        if [ "$time_difference" -gt 7200 ] || [ "$current_date" != "$analyze_date" ] || [ "$FORCE_ANALYZE" = true ]; then
+    if [ -n "$cs_analytics_time" ]; then
+        # 與最新的時間不同才做
+        if [ "$new_analytics_time" ">" "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
             copyAnalyze
             calculateReading
             echo "Do analyze again..."

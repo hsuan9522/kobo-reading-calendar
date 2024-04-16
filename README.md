@@ -3,43 +3,42 @@ The data source is the AnalyticsEvent table in Kobo's database. This table recor
 
 Since the data in the AnalyticsEvent table may disappear in some situations, it's not a bug if you can't find your previous reading statistics.
 
-The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and isn't user-friendly. Therefore, the reading calendar only displays an image cover on the screen; beneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will close.
+The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
+
+** Carefull, I only have a Kobo Nia, so I tested the function on it and have no idea how other models will perform.
 
 ![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/calendar.png)
 
 ### 資料夾結構
 ```
-├── data // 執行 copyAnalytics.sh，存放匯出的資料
-│   ├── YYYY-MM.json // 計算同一天內單一本書的閱讀時間(分)
-│   ├── fake.json // 假資料
+├── data // Save the exported data.
+│   ├── YYYY-MM.json // monthly data
+│   ├── fake.json // mock data
 │  
-├──  fonts // 字體資料夾
-│   ├── msjh.ttc // 中文字體，python 畫圖的時候會需要
+├──  fonts // font folder
+│   ├── msjh.ttc // font (Chinese, for example)
 │  
-├── image // 
-│   ├── calendar.png // 輸出結果範例圖
+├── image // output image
+│   ├── calendar.png
 │ 
 ├── Analytics.sqlite
-├── copyAnalytics.sh // 截取 kobo 的 content、AnalyticsEvent 兩張表
-├── readingCalendar.sh // 執行 python
-├── readingCalendar.py // 畫日曆的主要檔案
-├── readingCalendar_local.py // for local
-├── success.py // for nickelMenu chain_success
-├── config // nickelMenu's config
+├── copyAnalytics.sh // calculate reading statistics
+├── readingCalendar.sh // run Python
+├── readingCalendar.py // create reading calendar
+├── readingCalendar_local.py // for local testing
+├── success.py // for NickelMenu's chain_success
+├── config // NickelMenu configuration
 ```
 
 
 * **Analytics.sqlite**
-    > 用來分析 KoboReader.sqlite 的資料。
+    > Used for analyzing KoboReader.sqlite and storing data related to AnalyticsEvent and content.
 
-        Analytics: 
-        截取 KoboReader 裡 AnalyticsEvent table。
+        Analytics: Related to the AnalyticsEvent table.
         
-        Books:
-        截取 KoboReader 裡 content table。
+        Books: Related to the content table.
 
-        TimeInfo:
-        存執行 copyAnalytics.sh 時間及上面兩張最後更新時間的 Table。
+        TimeInfo: Stores running time and update time.
 
 ## Install:
 1. Install [all-in-one package](https://www.mobileread.com/forums/showthread.php?t=254214) (FBInk and other stuff)

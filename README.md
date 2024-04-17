@@ -21,6 +21,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 ├── image // output image
 │   ├── calendar.png
 │ 
+├── config.ini // customizable configurations
 ├── Analytics.sqlite
 ├── copyAnalytics.sh // calculate reading statistics
 ├── readingCalendar.sh // run Python
@@ -64,7 +65,17 @@ menu_item   :reader   :Curr Month Cal     :cmd_spawn  :quiet:python3 /mnt/onboar
     chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
 ```
 
+### Configuration:
+Here are the customizable settings:
+
+* **max_event**: Maximum number of books to display per day. If exceeded, it will be shown as "+more".
+* **event_bg**: Four sets of gray combinations for the background color of daily events. Corresponds with event_tx.
+* **event_tx**: Text color for daily events, paired with event_bg. For example, the first set has a background color of #C4CCD3 and text color of #000000, and so on.
+* **font_family**: File name of the font. Place the font in the /fonts folder.
+* **font_sm**, font_base, font_md, font_lg, font_xl: Font sizes for different levels.
 
 
-
-
+### TODO:
+1. 圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片
+2. 日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了
+3. 如果 max_event > 4 然後顏色只有四組，看看會不會有問題

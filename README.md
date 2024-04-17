@@ -9,7 +9,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 
 ![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/calendar.png)
 
-### 資料夾結構
+### Folder structure
 ```
 ├── data // Save the exported data.
 │   ├── YYYY-MM.json // monthly data

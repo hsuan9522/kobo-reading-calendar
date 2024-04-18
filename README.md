@@ -9,7 +9,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 
 ![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/calendar.png)
 
-### Folder structure
+## Folder structure
 ```
 ├── data // Save the exported data.
 │   ├── YYYY-MM.json // monthly data
@@ -65,17 +65,28 @@ menu_item   :reader   :Curr Month Cal     :cmd_spawn  :quiet:python3 /mnt/onboar
     chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
 ```
 
-### Configuration:
+## Configuration:
 Here are the customizable settings:
 
-* **max_event**: Maximum number of books to display per day. If exceeded, it will be shown as "+more".
-* **event_bg**: Four sets of gray combinations for the background color of daily events. Corresponds with event_tx.
-* **event_tx**: Text color for daily events, paired with event_bg. For example, the first set has a background color of #C4CCD3 and text color of #000000, and so on.
-* **font_family**: File name of the font. Place the font in the /fonts folder.
-* **font_sm**, font_base, font_md, font_lg, font_xl: Font sizes for different levels.
+```ini
+[General]
+max_event = 4	# Max books/day to display; if exceeded, show "+more".
+
+[Color]
+event_bg = #C4CCD3, #495057, #A4ADB6, #757E86	# Four gray background for events.
+event_tx = #000000, #E3E3E3, #000000, #E3E3E3	# Pair text color with event_bg, e.g., #C4CCD3 background with #000000 text.
+
+[Font]
+font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.
+font_sm = 13	# Font sizes for different levels.
+font_base = 15
+font_md = 18
+font_lg = 20
+font_xl = 28
+```
 
 
-### TODO:
+## TODO:
 1. 圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片
 2. 日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了
 3. 如果 max_event > 4 然後顏色只有四組，看看會不會有問題

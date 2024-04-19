@@ -3,7 +3,7 @@
 
 # To get a Py3k-like print function
 from __future__ import print_function
-from datetime import datetime
+from datetime import datetime, timedelta
 from _fbink import ffi, lib as FBInk
 from PIL import Image, ImageDraw, ImageFont
 import configparser
@@ -12,6 +12,7 @@ import calendar
 import time
 import sys
 import os
+import glob
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
@@ -245,6 +246,29 @@ def check_image(name):
     else:
         return False
 
+def remove_image():
+    count = int(config['General']['max_image'])
+    folder_path = './image'
+
+    all_images = glob.glob(os.path.join(folder_path, '*.png'))
+    if len(all_images) <= count:
+        return
+
+    date = datetime.now()
+    max_month = (date.replace(day=1) - timedelta(days=30*count)).replace(day=1)
+
+    # Delete images older than the last two months
+    for image_path in all_images:
+        file_name = os.path.basename(image_path).split('.')[0]
+        
+        year, month = map(int, file_name.split('-'))
+        image_date = datetime(year, month, 1)
+        if image_date < max_month:
+            try:
+                os.remove(image_path)
+                print(f"Deleted image: {image_path}")
+            except OSError as e:
+                print(f"Error deleting image {image_path}: {e}")
 
 def main():
     try:
@@ -295,6 +319,7 @@ def main():
             # Save the image
             image.save(image_name)
         
+        remove_image()
     finally:
         FBInk.fbink_close(fbfd)
 

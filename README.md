@@ -19,7 +19,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 │   ├── msjh.ttc // font (Chinese, for example)
 │  
 ├── image // output image
-│   ├── calendar.png
+│   ├── YYYY-MM.png // each month image
 │ 
 ├── config.ini // customizable configurations
 ├── Analytics.sqlite
@@ -71,6 +71,7 @@ Here are the customizable settings:
 ```ini
 [General]
 max_event = 4	# Max books/day to display; if exceeded, show "+more".
+max_image = 2   # Maximum image storage in /image.
 
 [Color]
 event_bg = #C4CCD3, #495057, #A4ADB6, #757E86	# Four gray background for events.

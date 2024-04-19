@@ -238,6 +238,12 @@ def draw_detail(events_data, date):
 
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
+def check_image(name):
+    if os.path.exists(name):
+        return True
+    else:
+        return False
+
 
 def main():
     try:
@@ -256,26 +262,37 @@ def main():
                 month = 12
             date = datetime(year, month, 1)
 
-        # Event data
-        file_name = date.strftime('%Y-%m')
-        events_data = get_file(f'./data/{file_name}.json')
-        # print(events_data)
+        dayMonth = date.strftime('%Y-%m')
+        image_name = f'./image/{dayMonth}.png'
+        file_name = f'./data/{file_name}.json'
 
-        # Draw calendar
-        draw_calendar(events_data, date)
-        draw_detail(events_data, date)
+        if check_image(image_name):
+            # do fbink...
+            FBInk.fbink_print_image(fbfd, image_name, 0, 0, fbink_cfg)
+        else:
+            # Event data
+            events_data = get_file(file_name)
+            # print(events_data)
+
+            # Draw calendar
+            draw_calendar(events_data, date)
+            draw_detail(events_data, date)
+
+            # Calucate running time
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
+
+            # FBInk
+            raw_data = image.tobytes("raw")
+            raw_len = len(raw_data)
+            FBInk.fbink_print_raw_data(
+                fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
+            )
 
         # Save the image
-        image.save('./image/calendar.png')
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
-        # FBInk
-        raw_data = image.tobytes("raw")
-        raw_len = len(raw_data)
-        FBInk.fbink_print_raw_data(
-            fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
-        )
+        image.save(image_name)
+        
         
     finally:
         FBInk.fbink_close(fbfd)

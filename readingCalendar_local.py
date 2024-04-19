@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 import configparser
 import sys
+import os
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -33,10 +34,17 @@ def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 def get_file(path):
-    with open(path, 'r', encoding="utf-8") as file:
-        data = json.load(file)
+    try:
+        with open(path, 'r', encoding="utf-8") as file:
+            data = json.load(file)
 
-    return data
+        return data
+    except:
+        # do fbink...
+        # fbink_cfg.is_halfway = False
+        # fbink_cfg.row = -2
+        # FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
+        exit(1)
 
 def get_time_format(time, date_type = 1):
     if date_type == 2:
@@ -213,6 +221,12 @@ def draw_detail(events_data, date):
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
 
+def check_image(name):
+    if os.path.exists(name):
+        return True
+    else:
+        return False
+
 def main():
     # set date
     # date = datetime(2024, 2, 1)
@@ -227,17 +241,24 @@ def main():
             year -= 1
             month = 12
         date = datetime(year, month, 1)
+    
+    dayMonth = date.strftime('%Y-%m')
 
-    # Event data
-    file_name = date.strftime('%Y-%m')
-    events_data = get_file(f'./data/{file_name}.json')
+    image_name = f'./image/{dayMonth}.png'
+    if check_image(image_name):
+        # do fbink...
+        print('draw image')
+        # FBInk.fbink_print_image(fbfd, image_name, 0, 0, fbink_cfg)
+    else:
+        # Event data
+        events_data = get_file(f'./data/{dayMonth}.json')
 
-    #Draw the calendar
-    draw_calendar(events_data, date)
-    draw_detail(events_data, date)
+        #Draw the calendar
+        draw_calendar(events_data, date)
+        draw_detail(events_data, date)
 
-    # Save the image
-    image.save('./image/calendar.png')
+        # Save the image
+        image.save(image_name)
 
 
 if __name__ == "__main__":

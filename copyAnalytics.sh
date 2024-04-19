@@ -1,4 +1,7 @@
 #!/bin/sh
+cd /mnt/onboard/.adds/utils/analytics
+python drawInfo.py
+
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"

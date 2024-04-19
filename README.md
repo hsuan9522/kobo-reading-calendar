@@ -27,7 +27,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 ├── readingCalendar.sh // run Python
 ├── readingCalendar.py // create reading calendar
 ├── readingCalendar_local.py // for local testing
-├── success.py // for NickelMenu's chain_success
+├── drawInfo.py // show info text
 ├── config // NickelMenu configuration
 ```
 
@@ -51,18 +51,13 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
     * Only the main menu, "Curr Month Cal," will refresh data and generate a new calendar.
     * Analyze in reader menu, refreshing the data will not open the calendar.
 ```
-menu_item   :main   :Last Month Cal   :cmd_spawn      :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
-    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
+menu_item   :main   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
 menu_item   :main   :Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
-    chain_success   :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py
-    chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
-
+    chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 
+    
 menu_item   :reader   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
-    chain_success   :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py
-menu_item   :reader   :Last Month Cal     :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
-    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
-menu_item   :reader   :Curr Month Cal     :cmd_spawn  :quiet:python3 /mnt/onboard/.adds/utils/analytics/success.py     
-    chain_success   :cmd_spawn   :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
+menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1  
+menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh     
 ```
 
 ## Configuration:

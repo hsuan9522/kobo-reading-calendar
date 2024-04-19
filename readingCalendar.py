@@ -11,6 +11,7 @@ import json
 import calendar
 import time
 import sys
+import os
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
@@ -254,7 +255,6 @@ def main():
         year = date.year
         month = date.month
         
-        events_data = ''
         if len(sys.argv) > 1:
             month -= 1
             if month == 0:
@@ -264,11 +264,13 @@ def main():
 
         dayMonth = date.strftime('%Y-%m')
         image_name = f'./image/{dayMonth}.png'
-        file_name = f'./data/{file_name}.json'
+        file_name = f'./data/{dayMonth}.json'
 
-        if check_image(image_name):
-            # do fbink...
-            FBInk.fbink_print_image(fbfd, image_name, 0, 0, fbink_cfg)
+        if check_image(image_name) and len(sys.argv) > 1:
+            # when there has last month image, doesn't need to calcute again.
+            # do fbink directly...
+            tmp = image_name.encode('utf-8')
+            FBInk.fbink_print_image(fbfd, tmp, 0, 0, fbink_cfg)
         else:
             # Event data
             events_data = get_file(file_name)
@@ -280,7 +282,7 @@ def main():
 
             # Calucate running time
             end_time = time.time()
-            elapsed_time = end_time - start_time
+            elapsed_time = round(end_time - start_time, 4)
             draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
 
             # FBInk
@@ -290,9 +292,8 @@ def main():
                 fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
             )
 
-        # Save the image
-        image.save(image_name)
-        
+            # Save the image
+            image.save(image_name)
         
     finally:
         FBInk.fbink_close(fbfd)

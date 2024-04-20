@@ -1,7 +1,8 @@
-menu_item   :main   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
-menu_item   :main   :當月日曆    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
-    chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 
-    
+menu_item   :main   :前月日曆   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
+    chain_failure   :cmd_output          :500:echo 'File not found. Please run current month calendar first.'
+menu_item   :main   :當月日曆    :cmd_output      :9999:quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh && sleep 2
+    chain_success   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
+    chain_failure   :dbg_error   :Something wrong...       
 menu_item   :reader   :分析     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
 menu_item   :reader   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1  
 menu_item   :reader   :當月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh     

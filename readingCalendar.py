@@ -55,16 +55,10 @@ def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 def get_file(path):
-    try:
-        with open(path, 'r', encoding="utf-8") as file:
-            data = json.load(file)
+    with open(path, 'r', encoding="utf-8") as file:
+        data = json.load(file)
 
-        return data
-    except:
-        fbink_cfg.is_halfway = False
-        fbink_cfg.row = -2
-        FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
-        exit(1)
+    return data
 
 def get_time_format(time, date_type = 1):
     if date_type == 2:
@@ -320,6 +314,8 @@ def main():
             image.save(image_name)
         
         remove_image()
+    except FileNotFoundError as e:
+        exit(1)
     finally:
         FBInk.fbink_close(fbfd)
 

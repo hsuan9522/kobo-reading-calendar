@@ -2,6 +2,7 @@
 The data source is the AnalyticsEvent table in Kobo's database. This table records the time from when a book is opened to when it is closed. The reading calendar is generated based on the total time recorded here, so there may be slight discrepancies compared to Kobo's own records of reading time for each book.
 
 Since the data in the AnalyticsEvent table may disappear in some situations, it's not a bug if you can't find your previous reading statistics.
+I recommend running my reading calendar once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
@@ -51,13 +52,14 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
     * Only the main menu, "Curr Month Cal," will refresh data and generate a new calendar.
     * Analyze in reader menu, refreshing the data will not open the calendar.
 ```
-menu_item   :main   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
-menu_item   :main   :Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
-    chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 
-    
+menu_item   :main   :Last Month Cal   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
+    chain_failure   :dbg_msg :File not found. Please run current month calendar first.
+menu_item   :main   :Curr Month Cal    :cmd_output      :9999:quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh && sleep 2
+    chain_success   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
+    chain_failure   :dbg_msg   :Something wrong...       
 menu_item   :reader   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
 menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1  
-menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh     
+menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh      
 ```
 
 ## Configuration:

@@ -1,6 +1,5 @@
 #!/bin/sh
-cd /mnt/onboard/.adds/utils/analytics
-python drawInfo.py
+fbink -pm -y -2 "Start Generating..."
 
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
@@ -140,9 +139,11 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
 
         # 與最新的時間不同才做
         if [ "$new_content_time" ">" "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
+            fbink -pm -y -2 "Refresh Books map..."
             copyContent
             echo "Refresh Books map..."
         else
+            fbink -pm -y -2 "There are no new books."
             echo "There are no new books."
         fi
     fi
@@ -150,14 +151,15 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
     if [ -n "$cs_analytics_time" ]; then
         # 與最新的時間不同才做
         if [ "$new_analytics_time" ">" "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
+            fbink -pm -y -2 "Generating analytics file..."
             copyAnalyze
             calculateReading
             echo "Generating analytics file..."
         else
+            fbink -pm -y -2 "No new analytics events."
             echo "No new analytics events."
         fi
     fi
-
 else
     copyContent
     copyAnalyze
@@ -167,8 +169,11 @@ fi
 
 last_month_file="$EXPORT$LAST_MONTH.json"
 if [ ! -f "$last_month_file" ]; then
+    fbink -pm -y -2 "Last month's file is generating..."
+
     calculateReading $LAST_MONTH
     echo "Last month's file is generating..."
 else
+    fbink -pm -y -2 "No need to generate last month's file."
     echo "No need to generate last month's file."
 fi

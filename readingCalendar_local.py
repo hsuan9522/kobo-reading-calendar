@@ -34,17 +34,10 @@ def parse_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d")
 
 def get_file(path):
-    try:
-        with open(path, 'r', encoding="utf-8") as file:
-            data = json.load(file)
+    with open(path, 'r', encoding="utf-8") as file:
+        data = json.load(file)
 
-        return data
-    except:
-        # do fbink...
-        # fbink_cfg.is_halfway = False
-        # fbink_cfg.row = -2
-        # FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
-        exit(1)
+    return data
 
 def get_time_format(time, date_type = 1):
     if date_type == 2:
@@ -220,12 +213,35 @@ def draw_detail(events_data, date):
 
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
-
 def check_image(name):
     if os.path.exists(name):
         return True
     else:
         return False
+
+def remove_image():
+    count = int(config['General']['max_image'])
+    folder_path = './image'
+
+    all_images = glob.glob(os.path.join(folder_path, '*.png'))
+    if len(all_images) <= count:
+        return
+
+    date = datetime.now()
+    max_month = (date.replace(day=1) - timedelta(days=30*count)).replace(day=1)
+
+    # Delete images older than the last two months
+    for image_path in all_images:
+        file_name = os.path.basename(image_path).split('.')[0]
+        
+        year, month = map(int, file_name.split('-'))
+        image_date = datetime(year, month, 1)
+        if image_date < max_month:
+            try:
+                os.remove(image_path)
+                print(f"Deleted image: {image_path}")
+            except OSError as e:
+                print(f"Error deleting image {image_path}: {e}")
 
 def main():
     # set date

@@ -8,8 +8,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 
 ** Carefull, I only have a Kobo Nia, so I tested the function on it and have no idea how other models will perform.
 
-![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/calendar.png)
-
+![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
 ## Folder structure
 ```
 ├── data // Save the exported data.
@@ -54,7 +53,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 ```
 menu_item   :main   :Last Month Cal   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
     chain_failure   :dbg_msg :File not found. Please run current month calendar first.
-menu_item   :main   :Curr Month Cal    :cmd_output      :9999:quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh && sleep 2
+menu_item   :main   :Curr Month Cal    :cmd_output      :9999:quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
     chain_success   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
     chain_failure   :dbg_msg   :Something wrong...       
 menu_item   :reader   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh

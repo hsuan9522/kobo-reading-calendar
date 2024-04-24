@@ -54,11 +54,11 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 menu_item   :main   :Last Month Cal   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1
     chain_failure   :dbg_msg :File not found. Please run current month calendar first.
 menu_item   :main   :Curr Month Cal    :cmd_output      :9999:quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
-    chain_success   :cmd_output  :9999:quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
-    chain_failure   :dbg_msg   :Something wrong...       
+    chain_success   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
+
 menu_item   :reader   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh
 menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh 1  
-menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh      
+menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh       
 ```
 
 ## Configuration:

@@ -24,6 +24,7 @@ config.read('config.ini')
 fbink_cfg = ffi.new("FBInkConfig *")
 fbink_cfg.is_centered = True
 fbink_cfg.is_halfway = True
+fbink_cfg.is_quiet = True
 
 fbfd = FBInk.fbink_open()
 FBInk.fbink_init(fbfd, fbink_cfg)

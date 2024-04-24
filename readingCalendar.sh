@@ -4,7 +4,7 @@ arg1="$1"
 cd /mnt/onboard/.adds/utils/analytics
 # python_version=$(python --version 2>&1)
 # echo "Python version: $python_version"
-fbink -pm -y -2 "Start Drawing..." &
+fbink -qpm -y -2 "Start Drawing..." &
 python readingCalendar.py $arg1 
 
 

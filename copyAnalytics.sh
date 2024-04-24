@@ -183,7 +183,7 @@ else
 fi
 
 last_month_file="$EXPORT$LAST_MONTH.json"
-if [ ! -f "$last_month_file" ]; then
+if [ ! -f "$last_month_file" ] || [ $(date +%d) = 1 ]; then
     fbink -qpm -y -2 "Last month's file is generating..."
 
     calculateReading $LAST_MONTH

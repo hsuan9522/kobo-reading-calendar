@@ -316,6 +316,16 @@ def main():
         
         remove_image()
     except FileNotFoundError as e:
+        print('File not found')
+        fbink_cfg.is_halfway = False
+        fbink_cfg.row = -2
+        FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
+        exit(1)
+    except Exception as e:
+        fbink_cfg.is_halfway = False
+        fbink_cfg.row = -2
+        FBInk.fbink_print(fbfd, b"An error occurred", fbink_cfg)
+        print(f'An error occurred: {e}')
         exit(1)
     finally:
         FBInk.fbink_close(fbfd)

@@ -1,6 +1,6 @@
 #!/bin/sh
 fbink -qpm -y -2 "Start Generating..."
-
+arg1="$1"
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
@@ -28,7 +28,6 @@ LAST_MONTH=$(printf "%d-%02d" $tmp_year $tmp_month)
 
 # Set journal mode to WAL (Write-Ahead Logging)
 journal_mode_sql="PRAGMA journal_mode = WAL;"
-
 
 copyAnalyze() {
     $SQLITE $MY_DB <<EOF
@@ -149,6 +148,19 @@ done < /tmp/sqlite_output.txt
 # Remove the temporary file
 rm /tmp/sqlite_output.txt
 
+# 檢查上個月檔案
+last_month_file="$EXPORT$LAST_MONTH.json"
+if [ ! -f "$last_month_file" ] || [ $(date +%d) = 1 ]; then
+    fbink -qpm -y -2 "Last month's file is generating..."
+    echo "Last month's file is generating..."
+
+    calculateReading $LAST_MONTH
+else
+    fbink -qpm -y -2 "No need to generate last month's file."
+    echo "No need to generate last month's file."
+fi
+
+
 if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
     if [ -n "$cs_content_time" ]; then
 
@@ -167,12 +179,19 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
         # 與最新的時間不同才做
         if [ "$new_analytics_time" ">" "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
             fbink -qpm -y -2 "Generating analytics file..."
+            echo "Generating analytics file..."
             copyAnalyze
             calculateReading
-            echo "Generating analytics file..."
+            sleep 0.5
+            if [ "$1" == "-calc" ]; then
+                "${FOLDER}/analytics/readingCalendar.sh"
+            fi
         else
             fbink -qpm -y -2 "No new analytics events."
             echo "No new analytics events."
+            if [ "$1" == "-calc" ]; then
+                fbink -q -g file="${FOLDER}/analytics/image/${CURRENT_MONTH}.png"
+            fi
         fi
     fi
 else
@@ -180,15 +199,4 @@ else
     copyAnalyze
     calculateReading
     echo "First time..."
-fi
-
-last_month_file="$EXPORT$LAST_MONTH.json"
-if [ ! -f "$last_month_file" ] || [ $(date +%d) = 1 ]; then
-    fbink -qpm -y -2 "Last month's file is generating..."
-
-    calculateReading $LAST_MONTH
-    echo "Last month's file is generating..."
-else
-    fbink -qpm -y -2 "No need to generate last month's file."
-    echo "No need to generate last month's file."
 fi

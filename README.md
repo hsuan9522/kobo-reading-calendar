@@ -88,3 +88,8 @@ font_xl = 28
 * ~~支援刪除過往的日曆圖片~~
 * 日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了
 * 如果 max_event > 4 然後顏色只有四組，看看會不會有問題
+
+
+---
+
+<a href="https://www.buymeacoffee.com/hsuan" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 165px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>

@@ -183,13 +183,13 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
             copyAnalyze
             calculateReading
             sleep 0.5
-            if [ "$1" == "-calc" ]; then
+            if [ "$1" == "-cal" ]; then
                 "${FOLDER}/analytics/readingCalendar.sh"
             fi
         else
             fbink -qpm -y -2 "No new analytics events."
             echo "No new analytics events."
-            if [ "$1" == "-calc" ]; then
+            if [ "$1" == "-cal" ]; then
                 fbink -q -g file="${FOLDER}/analytics/image/${CURRENT_MONTH}.png"
             fi
         fi

@@ -9,6 +9,7 @@ python readingCalendar.py $arg1
 
 
 if [ $? -ne 0 ]; then
+    fbink -qpm -y -2 "Run Python failed."
     echo "Error: Python script failed."
     exit 1
 fi

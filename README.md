@@ -7,9 +7,12 @@ I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
-** Carefull, I only have a Kobo Nia, so I tested the function on it and have no idea how other models will perform.
+** Carefull, I only have a Kobo Nia, so just tested the function on it and have no idea how other models will perform.
+Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function may not run quickly, so please be patient.
 
 ![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
+
+
 ## Folder structure
 ```
 ├── data // Save the exported data.

@@ -68,6 +68,9 @@ def get_time_format(time, date_type = 1):
         return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
 def draw_calendar(events_data, date):
+    global week_hours
+    global day_hours
+    
     current_year = date.year
     current_month = date.month
     current_day = date.day
@@ -96,6 +99,7 @@ def draw_calendar(events_data, date):
 
     total_event_count = 0
     for week_num, week in enumerate(cal_data):
+        tmp_week_hours = 0
         for day_num, day in enumerate(week):
             x = x_start + day_num * cell_size
             y = y_start + week_num * (cell_size + 20)
@@ -118,9 +122,10 @@ def draw_calendar(events_data, date):
                 event_height = 20
                 event_y = 20 + y + 2
 
+                tmp_day_hours = 0
                 for i, event in enumerate(events_on_day):
-                    event_block_color = gray_palette[(week_num + total_event_count) % 4]
-                    font_color = font_palette[(week_num + total_event_count) % 4]
+                    tmp_week_hours += event['TotalMinutesRead']
+                    tmp_day_hours += event['TotalMinutesRead']
                     event_book = event['Title']
                     event_title = f"{event['Title']}{event['Author']}"
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
@@ -195,7 +200,10 @@ def draw_calendar(events_data, date):
             tmp_day = day
             seen_titles = set()
             tmp_event = [f"{title['Title']}{title['Author']}" for title in events_on_day if not (f"{title['Title']}{title['Author']}" in seen_titles or seen_titles.add(f"{title['Title']}{title['Author']}"))]
-            day_map = {0: False, 1: False, 2: False, 3: False}
+
+            if current_day == day and datetime.now().month == current_month:
+                week_hours = tmp_week_hours
+                day_hours = tmp_day_hours
 
 def get_text(string, cell_size):
     i = 0
@@ -224,16 +232,21 @@ def draw_detail(events_data, date):
         total_minutes_by_title[title] = total_minutes_by_title.get(title, 0) + minutes_read
 
     # Print the total minutes read for each title
+    month_hours = 0
     for i, (title, total_minutes) in enumerate(total_minutes_by_title.items()):
+        month_hours += total_minutes
         text = f"{title.split('+')[0]}: {get_time_format(total_minutes, 2)}"
         if i < max_line:
             draw.text((x, y + i * title_height), text, font=font_md, fill="black")
-        elif i < max_line * 2:
+        elif i < (max_line * 2) - 1:
             new_i = (i + 1) % max_line - 1
             if new_i < 0:
                 new_i = max_line - 1
 
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
+
+    text = f"Total: {get_time_format(day_hours, 2)} / {get_time_format(week_hours, 2)} / {get_time_format(month_hours, 2)}"
+    draw.text((x + half_width, y - 10 + max_line * title_height), text, font=font_md, fill="black")   
 
 def check_image(name):
     if os.path.exists(name):

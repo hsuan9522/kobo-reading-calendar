@@ -1,8 +1,9 @@
 # kobo-reading-calendar
-The data source is the AnalyticsEvent table in Kobo's database. This table records the time from when a book is opened to when it is closed. The reading calendar is generated based on the total time recorded here, so there may be slight discrepancies compared to Kobo's own records of reading time for each book.
+The data source is the AnalyticsEvent table in Kobo's database.This table records the time from when a book is opened to when it is closed. The reading calendar is generated based on the total time recorded here, so there may be slight discrepancies compared to Kobo's own records of reading time for each book.
+I'm not sure if it's related to the privacy setting 'share data with Kobo', but I think the default setting is enabled. If you've read books and consistently can't find the data in this table, it might be worth checking this setting.
 
 Since the data in the AnalyticsEvent table may disappear in some situations, it's not a bug if you can't find your previous reading statistics.
-I recommend running my reading calendar once before you connect to the Wi-Fi.
+I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
@@ -83,7 +84,7 @@ font_xl = 28
 * ~~圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片~~ (DONE)
 * ~~支援刪除過往的日曆圖片~~ (DONE)
 * ~~日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了~~ (NO NEED，原本就是用計算的了，所以不用 config)
-* 如果 max_event > 4 然後顏色只有四組，看看會不會有問題
+* ~~如果 max_event > 4 然後顏色只有四組，看看會不會有問題~~ (DONE)
 
 
 ---

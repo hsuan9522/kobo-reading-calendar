@@ -53,7 +53,7 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
     * "**Curr Month Cal**" and "**Last Month Cal**" only display calendars; they don't calculate data.
 ```
 menu_item   :main   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh   
-menu_item   :main   :Analyze & Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
+menu_item   :main   :Analyze & Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal
 menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
 menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
 ```

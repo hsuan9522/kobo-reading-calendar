@@ -67,7 +67,15 @@ def get_time_format(time, date_type = 1):
     else:
         return "{:02d}:{:02d}:{:02d}".format(int(time // 60), int(time % 60), int((time % 1) * 60))
 
+def init_day_map(count):
+    day_map = {}
+    for i in range(count):
+        day_map[i] = False
+    return day_map
+
 def draw_calendar(events_data, date):
+    global gray_palette
+    global font_palette
     global week_hours
     global day_hours
     
@@ -81,7 +89,19 @@ def draw_calendar(events_data, date):
     tmp_position = {}
     tmp_color = {}
     tmp_total_time = {}
-    day_map = {0: False, 1: False, 2: False, 3: False}
+
+    max_count = int(config['General']['max_event'])
+    day_map = init_day_map(max_count)
+    
+    if max_count > 4 and len(gray_palette) < max_count:
+        tmp1 = []
+        tmp2 = []
+        for i in range(max_count):
+            tmp1.append(gray_palette[i % 4])
+            tmp2.append(font_palette[i % 4])
+        gray_palette = tmp1
+        font_palette = tmp2
+
 
     text = f'{current_year}/{current_month}'
     left, top, right, bottom = draw.textbbox((0,0), text, font=font_xl)
@@ -126,16 +146,18 @@ def draw_calendar(events_data, date):
                 for i, event in enumerate(events_on_day):
                     tmp_week_hours += event['TotalMinutesRead']
                     tmp_day_hours += event['TotalMinutesRead']
+                    tmp_index = (week_num + total_event_count) % max_count
+                    event_block_color = gray_palette[tmp_index]
+                    font_color = font_palette[tmp_index]
                     event_book = event['Title']
                     event_title = f"{event['Title']}{event['Author']}"
                     # event_title = event['Title'].encode("utf-8").decode("latin1")
 
                     # print(day, tmp_day, tmp_event, event['Title'])
-                    max_count = int(config['General']['max_event'])
                     if i >= max_count:
                         text = '+more'
                         left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
-                        draw.text((x + (cell_size - (right - left)) - 4, event_y + 2 + 4 * event_height), text, font=font, fill="black")
+                        draw.text((x + (cell_size - (right - left)) - 4, event_y + max_count * event_height), text, font=font, fill="black")
                         tmp_total_time[event_title] = event['TotalMinutesRead']
                         break
 
@@ -200,6 +222,7 @@ def draw_calendar(events_data, date):
             tmp_day = day
             seen_titles = set()
             tmp_event = [f"{title['Title']}{title['Author']}" for title in events_on_day if not (f"{title['Title']}{title['Author']}" in seen_titles or seen_titles.add(f"{title['Title']}{title['Author']}"))]
+            day_map = init_day_map(max_count)
 
             if current_day == day and datetime.now().month == current_month:
                 week_hours = tmp_week_hours

@@ -338,7 +338,8 @@ def main():
             # Calucate running time
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 4)
-            draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
+            print(f'Running time: {elapsed_time}')
+            # draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
 
             # FBInk
             raw_data = image.tobytes("raw")

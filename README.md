@@ -67,8 +67,8 @@ max_event = 4	# Max books/day to display; if exceeded, show "+more".
 max_image = 2   # Maximum image storage in /image.
 
 [Color]
-event_bg = #C4CCD3, #495057, #A4ADB6, #757E86	# Four gray background for events.
-event_tx = #000000, #E3E3E3, #000000, #E3E3E3	# Pair text color with event_bg, e.g., #C4CCD3 background with #000000 text.
+event_bg = #999999, #444444, #BBBBBB, #666666	# Four gray background for events.
+event_tx = #000000, #DDDDDD, #000000, #DDDDDD	# Pair text color with event_bg, e.g., #999999 background with #000000 text.
 
 [Font]
 font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.

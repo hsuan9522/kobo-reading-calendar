@@ -49,7 +49,7 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 1. Install [all-in-one package](https://www.mobileread.com/forums/showthread.php?t=254214) (FBInk and other stuff)
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
 3. Python is not included in an all-in-one package. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
-4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v1.0)).
+4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases)).
 	*  Copy `utils` folder to `.adds/`
 5. Write the NickelMenu configuration. There are four kind of command.
     * Analysis is crucial; run either "**Analyze**" or "**Analyze & Curr Month Cal**" before "**Curr Month Cal**" and **"Last Month Cal**".

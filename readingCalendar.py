@@ -78,7 +78,7 @@ def draw_calendar(events_data, date):
     global font_palette
     global week_hours
     global day_hours
-    
+
     current_year = date.year
     current_month = date.month
     current_day = date.day
@@ -268,7 +268,10 @@ def draw_detail(events_data, date):
 
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
-    text = f"Total: {get_time_format(day_hours, 2)} / {get_time_format(week_hours, 2)} / {get_time_format(month_hours, 2)}"
+    if len(sys.argv) > 1:
+        text = f"Total: {get_time_format(month_hours, 2)}"
+    else:
+        text = f"Total: {get_time_format(day_hours, 2)} / {get_time_format(week_hours, 2)} / {get_time_format(month_hours, 2)}"
     draw.text((x + half_width, y - 10 + max_line * title_height), text, font=font_md, fill="black")   
 
 def check_image(name):
@@ -309,7 +312,8 @@ def main():
         date = datetime.now()
         year = date.year
         month = date.month
-        
+        day = date.day
+
         if len(sys.argv) > 1:
             month -= 1
             if month == 0:
@@ -321,7 +325,7 @@ def main():
         image_name = f'./image/{dayMonth}.png'
         file_name = f'./data/{dayMonth}.json'
 
-        if check_image(image_name) and len(sys.argv) > 1:
+        if check_image(image_name) and len(sys.argv) > 1 and day != 1:
             # when there has last month image, doesn't need to calcute again.
             # do fbink directly...
             tmp = image_name.encode('utf-8')

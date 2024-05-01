@@ -7,9 +7,12 @@ I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
-** Carefull, I only have a Kobo Nia, so I tested the function on it and have no idea how other models will perform.
+** Carefull, I only have a Kobo Nia, so just tested the function on it and have no idea how other models will perform.
+Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
 ![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
+
+
 ## Folder structure
 ```
 ├── data // Save the exported data.
@@ -46,14 +49,14 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 1. Install [all-in-one package](https://www.mobileread.com/forums/showthread.php?t=254214) (FBInk and other stuff)
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
 3. Python is not included in an all-in-one package. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
-4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v1.0)).
+4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases)).
 	*  Copy `utils` folder to `.adds/`
 5. Write the NickelMenu configuration. There are four kind of command.
     * Analysis is crucial; run either "**Analyze**" or "**Analyze & Curr Month Cal**" before "**Curr Month Cal**" and **"Last Month Cal**".
     * "**Curr Month Cal**" and "**Last Month Cal**" only display calendars; they don't calculate data.
 ```
 menu_item   :main   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh   
-menu_item   :main   :Analyze & Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
+menu_item   :main   :Analyze & Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal
 menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
 menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
 ```
@@ -67,8 +70,8 @@ max_event = 4	# Max books/day to display; if exceeded, show "+more".
 max_image = 2   # Maximum image storage in /image.
 
 [Color]
-event_bg = #C4CCD3, #495057, #A4ADB6, #757E86	# Four gray background for events.
-event_tx = #000000, #E3E3E3, #000000, #E3E3E3	# Pair text color with event_bg, e.g., #C4CCD3 background with #000000 text.
+event_bg = #999999, #444444, #BBBBBB, #666666	# Four gray background for events.
+event_tx = #000000, #DDDDDD, #000000, #DDDDDD	# Pair text color with event_bg, e.g., #999999 background with #000000 text.
 
 [Font]
 font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.

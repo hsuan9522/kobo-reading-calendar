@@ -10,8 +10,8 @@ The only way to stop the touch event on Kobo is to shut down the Kobo process, b
 ** Carefull, I only have a Kobo Nia, so just tested the function on it and have no idea how other models will perform.
 Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
-![enter image description here](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
-
+![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
+![real on kobo](https://github.com/hsuan9522/kobo-reading-calendar/blob/master/image/real.jpg)
 
 ## Folder structure
 ```

@@ -80,14 +80,15 @@ copyContent() {
     WHERE
         ContentType = 6
         AND ContentID NOT LIKE 'file://%'
-        AND isDownloaded = 'true'
+        AND t1.isDownloaded = 'true'
+        AND t1.___UserID != ''
         AND Timestamp > COALESCE((SELECT Timestamp FROM TimeInfo WHERE Type = 'contentMaxTime'), 0);
         
     DETACH DATABASE src;
     DETACH DATABASE target;
 
     INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES('$CURRENT_TIMESTAMP', 'contentTime');
-    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES((SELECT MAX(Timestamp) FROM target.Books), 'contentMaxTime');
+    INSERT OR REPLACE INTO TimeInfo(Timestamp, Type) VALUES((SELECT MAX(Timestamp) FROM Books), 'contentMaxTime');
 EOF
 }
 

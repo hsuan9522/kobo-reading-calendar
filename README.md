@@ -77,9 +77,8 @@ event_tx = #000000, #DDDDDD, #000000, #DDDDDD	# Pair text color with event_bg, e
 font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.
 font_sm = 13	# Font sizes for different levels.
 font_base = 15
-font_md = 18
-font_lg = 20
-font_xl = 28
+font_md = 20
+font_lg = 28
 ```
 
 

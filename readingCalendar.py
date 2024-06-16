@@ -46,7 +46,6 @@ font = ImageFont.truetype(font_path, int(config['Font']['font_base']))
 font_sm = ImageFont.truetype(font_path, int(config['Font']['font_sm']))
 font_md = ImageFont.truetype(font_path, int(config['Font']['font_md']))
 font_lg = ImageFont.truetype(font_path, int(config['Font']['font_lg']))
-font_xl = ImageFont.truetype(font_path, int(config['Font']['font_xl']))
 
 gray_palette = [item.strip() for item in config['Color']['event_bg'].split(',')]
 font_palette = [item.strip() for item in config['Color']['event_tx'].split(',')]
@@ -104,32 +103,34 @@ def draw_calendar(events_data, date):
 
 
     text = f'{current_year}/{current_month}'
-    left, top, right, bottom = draw.textbbox((0,0), text, font=font_xl)
-    draw.text((screen_width // 2 - (right - left) // 2, 40), text, font=font_xl, fill="black")
+    left, top, right, bottom = draw.textbbox((0,0), text, font=font_lg)
+    draw.text((screen_width // 2 - (right - left) // 2, 100), text, font=font_lg, fill="black")
 
     # Define cell size and starting position
-    cell_size = (screen_width - 40) // 7
+    rec_width = (screen_width - 40) // 7
+    global rec_height
+    rec_height = rec_width + 30
     x_start = 20
-    y_start = 150
+    y_start = 230
 
     # Draw the days of the week
     days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     for i, day in enumerate(days_of_week):
-        draw.text((x_start + i * cell_size, y_start - 35), day, font=font_lg, fill="black")
+        draw.text((x_start + i * rec_width, y_start - 40), day, font=font_md, fill="black")
 
     total_event_count = 0
     for week_num, week in enumerate(cal_data):
         tmp_week_hours = 0
         for day_num, day in enumerate(week):
-            x = x_start + day_num * cell_size
-            y = y_start + week_num * (cell_size + 20)
+            x = x_start + day_num * rec_width
+            y = y_start + week_num * rec_height
 
             # Draw the day number with outline
             if day != 0:
                 if current_day == day and datetime.now().month == current_month:
-                    draw.ellipse((x + 3, y + 2, x + 21, y + 20), fill='#bdbebf')
+                    draw.ellipse((x + 4, y + 3, x + 26, y + 26), fill='#bdbebf')
                 draw.text((x + 5, y + 3), str(day), font=font_sm, fill="black")
-                draw.rectangle([x, y, x + cell_size, y + cell_size + 20], outline="black")
+                draw.rectangle([x, y, x + rec_width, y + rec_height], outline="black")
 
             # Check if there are events on this day and draw them
             events_on_day = [event for event in events_data if parse_date(event["Date"]).day == day]
@@ -139,8 +140,8 @@ def draw_calendar(events_data, date):
             
             # print(events_on_day)
             if events_on_day:
-                event_height = 20
-                event_y = 20 + y + 2
+                event_height = 30
+                event_y = 30 + y
 
                 tmp_day_hours = 0
                 for i, event in enumerate(events_on_day):
@@ -157,7 +158,7 @@ def draw_calendar(events_data, date):
                     if i >= max_count:
                         text = '+more'
                         left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
-                        draw.text((x + (cell_size - (right - left)) - 4, event_y + max_count * event_height), text, font=font, fill="black")
+                        draw.text((x + (rec_width - (right - left)) - 4, event_y + max_count * event_height), text, font=font, fill="black")
                         tmp_total_time[event_title] = event['TotalMinutesRead']
                         break
 
@@ -170,15 +171,15 @@ def draw_calendar(events_data, date):
                             save_color = tmp_color[event_title]
                             font_color = font_palette[gray_palette.index(save_color)] 
                             day_map[save_i] = True
-                            draw.rectangle([x , event_y + save_i * event_height, x + cell_size, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
+                            draw.rectangle([x , event_y + save_i * event_height + 1, x + rec_width, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
                             # 覆蓋掉原本的書名及時間
                             title_pos = tmp_position[event_title]['title_pos']
                             time_format = get_time_format(tmp_total_time[event_title])
                             text = f"{event_book} ({time_format})"
                             left, top, right, bottom = draw.textbbox(title_pos, text, font=font)
-                            if left ==  20 + (cell_size * 6) + 2:
-                                draw.rectangle((left, top , left + cell_size - 3, bottom), fill=save_color)
-                                text = get_text(text, cell_size)
+                            if left ==  20 + (rec_width * 6) + 2:
+                                draw.rectangle((left, top , left + rec_width - 3, bottom), fill=save_color)
+                                text = get_text(text, rec_width)
                             else:
                                 draw.rectangle((left, top, right, bottom), fill=save_color)
                             draw.text(title_pos, text, font=font, fill=font_color)
@@ -191,10 +192,10 @@ def draw_calendar(events_data, date):
                             tmp_position[event_title] = {
                                 'i': tmp_i,
                                 'title_pos': (x + 2, event_y + tmp_i * event_height),
-                                'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                                'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + rec_width, event_y + (tmp_i + 1) * event_height]
                             }
                             text = f"{event_book} ({time_format})"
-                            text = get_text(text, cell_size)
+                            text = get_text(text, rec_width)
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                             draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                             tmp_color[event_title] = event_block_color
@@ -208,10 +209,10 @@ def draw_calendar(events_data, date):
                         tmp_position[event_title] = {
                             'i': tmp_i,
                             'title_pos': (x + 2, event_y + tmp_i * event_height),
-                            'rect_pos': [x + 1 , event_y + tmp_i * event_height + 1, x - 1 + cell_size, event_y + (tmp_i + 1) * event_height]
+                            'rect_pos': [x + 1 , event_y + tmp_i * event_height + 1, x - 1 + rec_width, event_y + (tmp_i + 1) * event_height]
                         }
                         text = f"{event_book} ({time_format})"
-                        text = get_text(text, cell_size)
+                        text = get_text(text, rec_width)
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                         draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                         tmp_color[event_title] = event_block_color
@@ -228,11 +229,11 @@ def draw_calendar(events_data, date):
                 week_hours = tmp_week_hours
                 day_hours = tmp_day_hours
 
-def get_text(string, cell_size):
+def get_text(string, rec_width):
     i = 0
     width = font.getlength('.') * 3
     for char in string:
-        if width < cell_size - 8:
+        if width < rec_width - 8:
             i += 1
             width += font.getlength(char)
 
@@ -243,8 +244,8 @@ def draw_detail(events_data, date):
     cal_data = calendar.monthcalendar(date.year, date.month)
     weeks = len(cal_data)
     x = 20
-    y = 150 + ((screen_width - 40) // 7 + 20) * weeks  + 30
-    title_height = 35
+    y = 250 + rec_height * weeks
+    title_height = 40
     max_line = (screen_height - y) // title_height
     half_width = screen_width // 2
 
@@ -328,8 +329,9 @@ def main():
         if check_image(image_name) and len(sys.argv) > 1 and day != 1:
             # when there has last month image, doesn't need to calcute again.
             # do fbink directly...
-            tmp = image_name.encode('utf-8')
-            FBInk.fbink_print_image(fbfd, tmp, 0, 0, fbink_cfg)
+            print(f"file_name: {image_name}")
+            # tmp = image_name.encode('utf-8')
+            # FBInk.fbink_print_image(fbfd, tmp, 0, 0, fbink_cfg)
         else:
             # Event data
             events_data = get_file(file_name)
@@ -346,26 +348,27 @@ def main():
             # draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
 
             # FBInk
-            raw_data = image.tobytes("raw")
-            raw_len = len(raw_data)
-            FBInk.fbink_print_raw_data(
-                fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
-            )
+            # raw_data = image.tobytes("raw")
+            # raw_len = len(raw_data)
+            # FBInk.fbink_print_raw_data(
+            #     fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
+            # )
 
             # Save the image
             image.save(image_name)
+            print(f"file_name: {image_name}")
         
         remove_image()
     except FileNotFoundError as e:
         print('File not found')
         fbink_cfg.is_halfway = False
         fbink_cfg.row = -2
-        FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
+        # FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
         exit(1)
     except Exception as e:
         fbink_cfg.is_halfway = False
         fbink_cfg.row = -2
-        FBInk.fbink_print(fbfd, b"An error occurred", fbink_cfg)
+        # FBInk.fbink_print(fbfd, b"An error occurred", fbink_cfg)
         print(f'An error occurred: {e}')
         exit(1)
     finally:

@@ -30,7 +30,6 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 ├── copyAnalytics.sh // calculate reading statistics
 ├── readingCalendar.sh // run Python
 ├── readingCalendar.py // create reading calendar
-├── readingCalendar_local.py // for local testing
 ├── drawInfo.py // show info text
 ├── config // NickelMenu configuration
 ```

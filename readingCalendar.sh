@@ -13,7 +13,10 @@ python readingCalendar.py $arg1 > ./log 2>&1
 #     exit 1
 # fi
 
-
 file_name=$(grep 'file_name:' "./log" | awk -F': ' '{print $2}')
 
-fbink -g file=$file_name
+if [ -n "$file_name" ]; then
+    fbink -g file=$file_name
+else
+    echo "No file_name found in the log."
+fi

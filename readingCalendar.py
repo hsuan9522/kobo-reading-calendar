@@ -89,6 +89,7 @@ def draw_calendar(events_data, date):
     tmp_color = {}
     tmp_total_time = {}
 
+    event_height = int(config['General']['event_height'])
     max_count = int(config['General']['max_event'])
     day_map = init_day_map(max_count)
     
@@ -140,8 +141,7 @@ def draw_calendar(events_data, date):
             
             # print(events_on_day)
             if events_on_day:
-                event_height = 30
-                event_y = 30 + y
+                event_y = event_height + y
 
                 tmp_day_hours = 0
                 for i, event in enumerate(events_on_day):
@@ -277,7 +277,13 @@ def draw_detail(events_data, date):
 
 def check_image(name):
     if os.path.exists(name):
-        return True
+        mod_time = os.path.getmtime(name)
+        mod_time = datetime.fromtimestamp(mod_time)
+        now = datetime.now()
+        if(mod_time.year == now.year and mod_time.month == now.month):
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -313,7 +319,6 @@ def main():
         date = datetime.now()
         year = date.year
         month = date.month
-        day = date.day
 
         if len(sys.argv) > 1:
             month -= 1
@@ -326,12 +331,9 @@ def main():
         image_name = f'./image/{dayMonth}.png'
         file_name = f'./data/{dayMonth}.json'
 
-        if check_image(image_name) and len(sys.argv) > 1 and day != 1:
+        if check_image(image_name) and len(sys.argv) > 1:
             # when there has last month image, doesn't need to calcute again.
-            # do fbink directly...
             print(f"file_name: {image_name}")
-            # tmp = image_name.encode('utf-8')
-            # FBInk.fbink_print_image(fbfd, tmp, 0, 0, fbink_cfg)
         else:
             # Event data
             events_data = get_file(file_name)
@@ -345,14 +347,6 @@ def main():
             end_time = time.time()
             elapsed_time = round(end_time - start_time, 4)
             print(f'Running time: {elapsed_time}')
-            # draw.text((0 ,0), f"{elapsed_time}", font=font_sm, fill="black")
-
-            # FBInk
-            # raw_data = image.tobytes("raw")
-            # raw_len = len(raw_data)
-            # FBInk.fbink_print_raw_data(
-            #     fbfd, raw_data, image.width, image.height, raw_len, 0, 0, fbink_cfg
-            # )
 
             # Save the image
             image.save(image_name)

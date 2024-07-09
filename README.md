@@ -7,7 +7,7 @@ I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
-** Carefull, I only have a Kobo Nia, so just tested the function on it and have no idea how other models will perform.
+** Please note, version 2.3 has only been tested on the Kobo Nia, and version 3.0 has only been tested on the Clara BW.
 Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
 ![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
@@ -30,7 +30,6 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 ├── copyAnalytics.sh // calculate reading statistics
 ├── readingCalendar.sh // run Python
 ├── readingCalendar.py // create reading calendar
-├── readingCalendar_local.py // for local testing
 ├── drawInfo.py // show info text
 ├── config // NickelMenu configuration
 ```
@@ -47,6 +46,7 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 
 ## Install:
 1. Install [all-in-one package](https://www.mobileread.com/forums/showthread.php?t=254214) (FBInk and other stuff)
+    * Since FBInk's official website currently does not have the latest build, I built it myself. If you are using the newest Kobo device, you need to install this version of [FBInk](https://github.com/hsuan9522/kobo-reading-calendar/raw/feature/kobo-clara-bw/KoboRoot.tgz) again until the newest version becomes available.
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
 3. Python is not included in an all-in-one package. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
 4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases)).
@@ -68,6 +68,7 @@ Here are the customizable settings:
 [General]
 max_event = 4	# Max books/day to display; if exceeded, show "+more".
 max_image = 2   # Maximum image storage in /image.
+event_height = 30 # Height of each book's event *v3.0*
 
 [Color]
 event_bg = #999999, #444444, #BBBBBB, #666666	# Four gray background for events.
@@ -76,10 +77,9 @@ event_tx = #000000, #DDDDDD, #000000, #DDDDDD	# Pair text color with event_bg, e
 [Font]
 font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.
 font_sm = 13	# Font sizes for different levels.
-font_base = 15
-font_md = 18
-font_lg = 20
-font_xl = 28
+font_base = 20
+font_md = 24
+font_lg = 36
 ```
 
 

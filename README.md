@@ -7,7 +7,7 @@ I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
-** Please note, version 2.3 has only been tested on the Kobo Nia, and version 3.0 has only been tested on the Clara BW.
+** Please note, [v2.3](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v2.3) has only been tested on the **Nia**, and [v3.0](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v3.0) has only been tested on the **Clara BW**.
 Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
 ![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
@@ -68,7 +68,7 @@ Here are the customizable settings:
 [General]
 max_event = 4	# Max books/day to display; if exceeded, show "+more".
 max_image = 2   # Maximum image storage in /image.
-event_height = 30 # Height of each book's event *v3.0*
+event_height = 30 # Height of each book's event **v3.0**
 
 [Color]
 event_bg = #999999, #444444, #BBBBBB, #666666	# Four gray background for events.

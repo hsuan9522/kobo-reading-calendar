@@ -18,12 +18,13 @@ CURRENT_MONTH=$(date +"%Y-%m")
 CURRENT_TIMESTAMP=$(date +"%s")
 
 tmp_year=${CURRENT_MONTH%-*}
-tmp_month=$((${CURRENT_MONTH#*-} - 1)) 
+tmp_month=${CURRENT_MONTH#*-}
+tmp_month=$((10#$tmp_month - 1))
 if [ $tmp_month -eq 0 ]; then
     tmp_month=12
     tmp_year=$((tmp_year - 1))
 fi
-LAST_MONTH=$(printf "%d-%02d" $tmp_year $tmp_month)
+LAST_MONTH=$(printf "%04d-%02d" $tmp_year $tmp_month)
 
 
 # Set journal mode to WAL (Write-Ahead Logging)

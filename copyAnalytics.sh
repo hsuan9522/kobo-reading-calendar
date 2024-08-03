@@ -192,7 +192,12 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
             fbink -qpm -y -2 "No new analytics events."
             echo "No new analytics events."
             if [ "$1" == "-cal" ]; then
-                fbink -q -g file="${FOLDER}/analytics/image/${CURRENT_MONTH}.png"
+                image_file="${FOLDER}/analytics/image/${CURRENT_MONTH}.png"
+                if [ -f "$image_file" ]; then
+                    fbink -q -g file="$image_file"
+                else
+                    "${FOLDER}/analytics/readingCalendar.sh"
+                fi
             fi
         fi
     fi

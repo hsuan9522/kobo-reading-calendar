@@ -152,7 +152,8 @@ rm /tmp/sqlite_output.txt
 
 # 檢查上個月檔案
 last_month_file="$EXPORT$LAST_MONTH.json"
-if [ ! -f "$last_month_file" ] || [ $(date +%d) = 1 ]; then
+file_mod_month=$(date -r "$last_month_file" +%-m)
+if [ ! -f "$last_month_file" ] || [ "$file_mod_month" = "$tmp_month" ]; then
     fbink -qpm -y -2 "Last month's file is generating..."
     echo "Last month's file is generating..."
 

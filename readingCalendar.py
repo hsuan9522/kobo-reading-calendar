@@ -13,6 +13,7 @@ import time
 import sys
 import os
 import glob
+import subprocess
 
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
@@ -335,6 +336,9 @@ def main():
             # when there has last month image, doesn't need to calcute again.
             print(f"file_name: {image_name}")
         else:
+            if len(sys.argv) > 1:
+                # 上個月的如果重畫就重新計算一次，當月不需要判斷是執行的是 copyAnalytics.sh
+                subprocess.run(['./copyAnalytics.sh'])
             # Event data
             events_data = get_file(file_name)
             # print(events_data)

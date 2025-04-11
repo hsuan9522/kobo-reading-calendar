@@ -1,4 +1,7 @@
 # kobo-reading-calendar
+
+[Chinese Briefing](https://medium.com/@hsuan9522/kobo-reading-calendar-a49f3379935b)
+
 The data source is the AnalyticsEvent table in Kobo's database.This table records the time from when a book is opened to when it is closed. The reading calendar is generated based on the total time recorded here, so there may be slight discrepancies compared to Kobo's own records of reading time for each book.
 I'm not sure if it's related to the privacy setting 'share data with Kobo', but I think the default setting is enabled. If you've read books and consistently can't find the data in this table, it might be worth checking this setting.
 
@@ -81,7 +84,6 @@ font_base = 20
 font_md = 24
 font_lg = 36
 ```
-
 
 ## TODO:
 * ~~圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片~~ (DONE)

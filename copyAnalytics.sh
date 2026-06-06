@@ -1,6 +1,5 @@
 #!/bin/sh
 fbink -qpm -y -2 "Start Generating..."
-arg1="$1"
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
@@ -12,7 +11,7 @@ export LD_LIBRARY_PATH
 
 # Source and destination database file paths
 KOBO_DB="/mnt/onboard/.kobo/KoboReader.sqlite"
-MY_DB="$FOLDER/analytics/Analytics.sqlite"
+MY_DB="$FOLDER/HsKobo.sqlite"
 
 CURRENT_MONTH=$(date +"%Y-%m")
 CURRENT_TIMESTAMP=$(date +"%s")
@@ -67,7 +66,6 @@ copyAnalyze() {
 EOF
 }
 
-
 copyContent() {
     $SQLITE $MY_DB <<EOF
     $locking_mode_sql
@@ -75,16 +73,31 @@ copyContent() {
     ATTACH DATABASE '$KOBO_DB' AS src;
     ATTACH DATABASE '$MY_DB' AS target;
 
-    INSERT OR IGNORE INTO target.Books
-    SELECT ContentID, Title, Attribution AS Author, ___SyncTime AS Timestamp
+    INSERT OR REPLACE INTO target.Books
+    SELECT *, Attribution AS Author, ___SyncTime AS Timestamp
     FROM src.content AS t1
     WHERE
         ContentType = 6
-        AND ContentID NOT LIKE 'file://%'
-        AND t1.isDownloaded = 'true'
-        AND t1.___UserID != ''
-        AND Timestamp > COALESCE((SELECT Timestamp FROM TimeInfo WHERE Type = 'contentMaxTime'), 0);
-        
+        AND (
+            (Accessibility = -1 AND IsDownloaded = 'true')
+            OR (Accessibility IN (1, 2))
+        )
+        AND (
+            t1.___SyncTime > COALESCE((SELECT Timestamp FROM target.TimeInfo WHERE Type = 'contentMaxTime'), 0)
+            OR EXISTS (
+                SELECT 1 FROM target.Books AS t2
+                WHERE t2.ContentID = t1.ContentID
+                AND (
+                    t2.___FileSize != t1.___FileSize OR
+                    t2.___PercentRead != t1.___PercentRead OR
+                    t2.TimeSpentReading != t1.TimeSpentReading OR
+                    t2.ReadStatus != t1.ReadStatus OR
+                    t2.Timestamp != t1.___SyncTime OR
+                    t2.DateModified != t1.DateModified
+                )
+            )
+        );
+
     DETACH DATABASE src;
     DETACH DATABASE target;
 
@@ -156,7 +169,7 @@ file_mod_month=$(date -r "$last_month_file" +%-m)
 if [ ! -f "$last_month_file" ] || [ "$file_mod_month" = "$tmp_month" ]; then
     fbink -qpm -y -2 "Last month's file is generating..."
     echo "Last month's file is generating..."
-
+    copyAnalyze
     calculateReading $LAST_MONTH
 else
     fbink -qpm -y -2 "No need to generate last month's file."
@@ -164,8 +177,8 @@ else
 fi
 
 
-if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
-    if [ -n "$cs_content_time" ]; then
+if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ] || [ "$FORCE_ANALYZE" = true ]; then
+    if [ -n "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
 
         # 與最新的時間不同才做
         if [ "$new_content_time" ">" "$cs_content_time" ] || [ "$FORCE_CONTENT" = true ]; then
@@ -178,7 +191,7 @@ if [ -n "$cs_analytics_time" ] || [ -n "$cs_content_time" ]; then
         fi
     fi
 
-    if [ -n "$cs_analytics_time" ]; then
+    if [ -n "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
         # 與最新的時間不同才做
         if [ "$new_analytics_time" ">" "$cs_analytics_time" ] || [ "$FORCE_ANALYZE" = true ]; then
             fbink -qpm -y -2 "Generating analytics file..."

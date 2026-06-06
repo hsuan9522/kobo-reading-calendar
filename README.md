@@ -29,16 +29,15 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 │   ├── YYYY-MM.png // each month image
 │ 
 ├── config.ini // customizable configurations
-├── Analytics.sqlite
+├── HsKobo.sqlite
 ├── copyAnalytics.sh // calculate reading statistics
 ├── readingCalendar.sh // run Python
 ├── readingCalendar.py // create reading calendar
-├── drawInfo.py // show info text
 ├── config // NickelMenu configuration
 ```
 
 
-* **Analytics.sqlite**
+* **HsKobo.sqlite**
     > Used for analyzing KoboReader.sqlite and storing data related to AnalyticsEvent and content.
 
         Analytics: Related to the AnalyticsEvent table.

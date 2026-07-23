@@ -1,0 +1,68 @@
+name: Build and release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Build ZIP package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PACKAGE_NAME="kobo-reading-calendar"
+          ARCHIVE_NAME="${PACKAGE_NAME}-${GITHUB_REF_NAME}.zip"
+
+          PACKAGE_DIR="package/${PACKAGE_NAME}"
+          UTILS_DIR="${PACKAGE_DIR}/utils"
+          ANALYTICS_DIR="${UTILS_DIR}/analytics"
+
+          mkdir -p "${ANALYTICS_DIR}"
+
+          # 與 utils 同一層
+          install -m 755 readingCalendar "${PACKAGE_DIR}/readingCalendar"
+
+          # analytics 裡的檔案
+          install -m 644 HsKobo.sqlite "${ANALYTICS_DIR}/HsKobo.sqlite"
+          install -m 755 copyAnalytics.sh "${ANALYTICS_DIR}/copyAnalytics.sh"
+          install -m 644 readingCalendar.py "${ANALYTICS_DIR}/readingCalendar.py"
+          install -m 755 readingCalendar.sh "${ANALYTICS_DIR}/readingCalendar.sh"
+          install -m 644 config.ini "${ANALYTICS_DIR}/config.ini"
+
+          cp -a fonts "${ANALYTICS_DIR}/fonts"
+          cp -a image "${ANALYTICS_DIR}/image"
+          cp -a data "${ANALYTICS_DIR}/data"
+
+          # sqlite3 與 analytics 同一層
+          install -m 755 sqlite3 "${UTILS_DIR}/sqlite3"
+
+          # 清除可能存在的 macOS 隱藏檔案
+          find package -name ".DS_Store" -delete
+
+          (
+            cd package
+            zip -r "../${ARCHIVE_NAME}" "${PACKAGE_NAME}"
+          )
+
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "${ARCHIVE_NAME}" \
+            --verify-tag \
+            --generate-notes \
+            --title "${GITHUB_REF_NAME}"

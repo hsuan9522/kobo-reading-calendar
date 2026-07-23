@@ -3,7 +3,8 @@ fbink -qpm -y -2 "Start Generating..."
 FORCE_ANALYZE=false
 FORCE_CONTENT=false
 FOLDER="/mnt/onboard/.adds/utils"
-EXPORT="$FOLDER/analytics/data/"
+ANALYTICS_DIR="$FOLDER/analytics"
+EXPORT="$ANALYTICS_DIR/data/"
 SQLITE="${FOLDER}/sqlite3"
 
 LD_LIBRARY_PATH="${FOLDER}/lib:${LD_LIBRARY_PATH}"
@@ -12,6 +13,16 @@ export LD_LIBRARY_PATH
 # Source and destination database file paths
 KOBO_DB="/mnt/onboard/.kobo/KoboReader.sqlite"
 MY_DB="$FOLDER/HsKobo.sqlite"
+
+# Runtime-owned files are created only when missing so reinstalling or
+# upgrading with the same KoboRoot.tgz preserves reading data and settings.
+mkdir -p "$EXPORT" "$ANALYTICS_DIR/image"
+if [ ! -f "$MY_DB" ]; then
+    cp "$FOLDER/HsKobo.sqlite.template" "$MY_DB"
+fi
+if [ ! -f "$ANALYTICS_DIR/config.ini" ]; then
+    cp "$ANALYTICS_DIR/config.ini.default" "$ANALYTICS_DIR/config.ini"
+fi
 
 CURRENT_MONTH=$(date +"%Y-%m")
 CURRENT_TIMESTAMP=$(date +"%s")

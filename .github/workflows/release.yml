@@ -16,44 +16,35 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v6
 
-      - name: Build ZIP package
+      - name: Build KoboRoot.tgz
         shell: bash
         run: |
           set -euo pipefail
 
-          PACKAGE_NAME="kobo-reading-calendar"
-          ARCHIVE_NAME="${PACKAGE_NAME}-${GITHUB_REF_NAME}.zip"
-
-          PACKAGE_DIR="package/${PACKAGE_NAME}"
-          UTILS_DIR="${PACKAGE_DIR}/utils"
+          ARCHIVE_NAME="KoboRoot.tgz"
+          ONBOARD_DIR="package/mnt/onboard"
+          NM_DIR="${ONBOARD_DIR}/.adds/nm"
+          UTILS_DIR="${ONBOARD_DIR}/.adds/utils"
           ANALYTICS_DIR="${UTILS_DIR}/analytics"
 
-          mkdir -p "${ANALYTICS_DIR}"
+          mkdir -p "${NM_DIR}" "${ANALYTICS_DIR}"
 
-          # 與 utils 同一層
-          install -m 755 readingCalendar "${PACKAGE_DIR}/readingCalendar"
-
-          # analytics 裡的檔案
-          install -m 644 HsKobo.sqlite "${ANALYTICS_DIR}/HsKobo.sqlite"
+          install -m 755 readingCalendar "${NM_DIR}/readingCalendar"
+          install -m 644 HsKobo.sqlite "${UTILS_DIR}/HsKobo.sqlite.template"
           install -m 755 copyAnalytics.sh "${ANALYTICS_DIR}/copyAnalytics.sh"
           install -m 644 readingCalendar.py "${ANALYTICS_DIR}/readingCalendar.py"
           install -m 755 readingCalendar.sh "${ANALYTICS_DIR}/readingCalendar.sh"
-          install -m 644 config.ini "${ANALYTICS_DIR}/config.ini"
+          install -m 644 config.ini "${ANALYTICS_DIR}/config.ini.default"
 
           cp -a fonts "${ANALYTICS_DIR}/fonts"
-          cp -a image "${ANALYTICS_DIR}/image"
-          cp -a data "${ANALYTICS_DIR}/data"
-
-          # sqlite3 與 analytics 同一層
           install -m 755 sqlite3 "${UTILS_DIR}/sqlite3"
 
-          # 清除可能存在的 macOS 隱藏檔案
           find package -name ".DS_Store" -delete
 
-          (
-            cd package
-            zip -r "../${ARCHIVE_NAME}" "${PACKAGE_NAME}"
-          )
+          tar -C package \
+            --owner=root --group=root \
+            -czf "${GITHUB_WORKSPACE}/${ARCHIVE_NAME}" \
+            mnt
 
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
 

@@ -50,10 +50,12 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 1. Install [KoboStuff](https://www.mobileread.com/forums/showthread.php?t=225030), find KoboStuff in the threads, download and install it.
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
 3. Python is not included in KoboStuff. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
-4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases)).
-	* Copy `utils` folder to `.adds/`
-    * Move `readingCalendar` to `.adds/nm/`
-5. Then you can use it.
+4. Download `KoboRoot.tgz` from the latest
+   [release](https://github.com/hsuan9522/kobo-reading-calendar/releases).
+5. Copy `KoboRoot.tgz` to the `.kobo/` folder on your Kobo, then safely eject
+   the device. Kobo will install it and restart automatically.
+6. The same package can be used for both a first install and an upgrade.
+   Existing reading data and `config.ini` settings are preserved.
 ```
 menu_item   :main   :Last Month   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
 menu_item   :main   :This Month   :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1

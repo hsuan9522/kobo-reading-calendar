@@ -2,7 +2,6 @@
 set -eu
 
 PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-PACKAGE_NAME="kobo-reading-calendar"
 OUTPUT_DIR="$PROJECT_DIR/dist"
 STAGING_DIR=$(mktemp -d)
 
@@ -11,32 +10,30 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-PACKAGE_DIR="$STAGING_DIR/$PACKAGE_NAME"
-UTILS_DIR="$PACKAGE_DIR/utils"
+ONBOARD_DIR="$STAGING_DIR/mnt/onboard"
+NM_DIR="$ONBOARD_DIR/.adds/nm"
+UTILS_DIR="$ONBOARD_DIR/.adds/utils"
 ANALYTICS_DIR="$UTILS_DIR/analytics"
 
-mkdir -p "$ANALYTICS_DIR"
+mkdir -p "$NM_DIR" "$ANALYTICS_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-# readingCalendar 與 utils 位於同一層
-cp -p "$PROJECT_DIR/readingCalendar" "$PACKAGE_DIR/"
+# NickelMenu configuration
+cp -p "$PROJECT_DIR/readingCalendar" "$NM_DIR/"
 
-# analytics 相關內容
-cp -p "$PROJECT_DIR/HsKobo.sqlite"      "$ANALYTICS_DIR/"
+# Application files. Mutable working files are intentionally not packaged:
+# HsKobo.sqlite, config.ini, data/, image/, and log.
+cp -p "$PROJECT_DIR/HsKobo.sqlite"      "$UTILS_DIR/HsKobo.sqlite.template"
 cp -p "$PROJECT_DIR/copyAnalytics.sh"   "$ANALYTICS_DIR/"
 cp -p "$PROJECT_DIR/readingCalendar.py" "$ANALYTICS_DIR/"
 cp -p "$PROJECT_DIR/readingCalendar.sh" "$ANALYTICS_DIR/"
-cp -p "$PROJECT_DIR/config.ini"         "$ANALYTICS_DIR/"
+cp -p "$PROJECT_DIR/config.ini"         "$ANALYTICS_DIR/config.ini.default"
 
 cp -R "$PROJECT_DIR/fonts" "$ANALYTICS_DIR/"
-cp -R "$PROJECT_DIR/image" "$ANALYTICS_DIR/"
-cp -R "$PROJECT_DIR/data"  "$ANALYTICS_DIR/"
 
-# sqlite3 與 analytics 位於同一層
 cp -p "$PROJECT_DIR/sqlite3" "$UTILS_DIR/"
 
-# 設定執行權限
-chmod +x "$PACKAGE_DIR/readingCalendar"
+chmod +x "$NM_DIR/readingCalendar"
 chmod +x "$ANALYTICS_DIR/copyAnalytics.sh"
 chmod +x "$ANALYTICS_DIR/readingCalendar.sh"
 chmod +x "$UTILS_DIR/sqlite3"
@@ -44,11 +41,9 @@ chmod +x "$UTILS_DIR/sqlite3"
 # 移除 macOS 隱藏檔案
 find "$STAGING_DIR" -name ".DS_Store" -delete
 
-OUTPUT_FILE="$OUTPUT_DIR/$PACKAGE_NAME.zip"
+OUTPUT_FILE="$OUTPUT_DIR/KoboRoot.tgz"
 rm -f "$OUTPUT_FILE"
 
-ditto -c -k --norsrc --keepParent \
-    "$PACKAGE_DIR" \
-    "$OUTPUT_FILE"
+tar -C "$STAGING_DIR" -czf "$OUTPUT_FILE" mnt
 
 echo "打包完成：$OUTPUT_FILE"

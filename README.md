@@ -47,20 +47,16 @@ Before you run it, I suggest that you backup your device first to avoid any pote
         TimeInfo: Stores running time and update time.
 
 ## Install:
-1. Install [all-in-one package](https://www.mobileread.com/forums/showthread.php?t=254214) (FBInk and other stuff)
-    * Since FBInk's official website currently does not have the latest build, I built it myself. If you are using the newest Kobo device, you need to install this version of [FBInk](https://github.com/hsuan9522/kobo-reading-calendar/raw/feature/kobo-clara-bw/KoboRoot.tgz) again until the newest version becomes available.
+1. Install [KoboStuff](https://www.mobileread.com/forums/showthread.php?t=225030), find KoboStuff in the threads, download and install it.
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
-3. Python is not included in an all-in-one package. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
+3. Python is not included in KoboStuff. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
 4. Download this project ([kobo-reading-calendar](https://github.com/hsuan9522/kobo-reading-calendar/releases)).
-	*  Copy `utils` folder to `.adds/`
-5. Write the NickelMenu configuration. There are four kind of command.
-    * Analysis is crucial; run either "**Analyze**" or "**Analyze & Curr Month Cal**" before "**Curr Month Cal**" and **"Last Month Cal**".
-    * "**Curr Month Cal**" and "**Last Month Cal**" only display calendars; they don't calculate data.
+	* Copy `utils` folder to `.adds/`
+    * Move `readingCalendar` to `.adds/nm/`
+5. Then you can use it.
 ```
-menu_item   :main   :Analyze     :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh   
-menu_item   :main   :Analyze & Curr Month Cal    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal
-menu_item   :reader   :Curr Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh
-menu_item   :reader   :Last Month Cal   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
+menu_item   :main   :Last Month   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
+menu_item   :main   :This Month   :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
 ```
 
 ## Configuration:

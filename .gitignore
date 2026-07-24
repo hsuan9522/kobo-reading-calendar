@@ -1,2 +1,4 @@
 .DS_Store
 dist/
+preview/
+__pycache__/

@@ -4,7 +4,6 @@
 # To get a Py3k-like print function
 from __future__ import print_function
 from datetime import datetime, timedelta
-from _fbink import ffi, lib as FBInk
 from PIL import Image, ImageDraw, ImageFont
 import configparser
 import json
@@ -15,6 +14,39 @@ import os
 import glob
 import subprocess
 
+MODEL_SCREENS = {
+    'nia': (758, 1024),
+    'clara': (1072, 1448),
+    'libra': (1264, 1680),
+    'forma': (1440, 1920),
+    'sage': (1440, 1920),
+    'elipsa': (1404, 1872),
+}
+
+
+def get_option(name):
+    if name not in sys.argv:
+        return None
+
+    index = sys.argv.index(name)
+    if index + 1 >= len(sys.argv):
+        raise ValueError(f'Missing value for {name}')
+
+    return sys.argv[index + 1]
+
+
+preview_model = get_option('--model')
+preview_data_file = get_option('--data')
+preview_month = get_option('--month')
+preview_mode = preview_model is not None
+previous_month = not preview_mode and len(sys.argv) > 1
+
+if preview_mode:
+    preview_model = preview_model.lower()
+    if preview_model != 'all' and preview_model not in MODEL_SCREENS:
+        supported = ', '.join(sorted(MODEL_SCREENS))
+        raise ValueError(f'Unknown model "{preview_model}". Supported models: all, {supported}')
+
 # Let's check which FBInk version we're using...
 # NOTE: ffi.string() returns a bytes on Python 3, not a str, hence the extra decode
 # print("Loaded FBInk {}".format(ffi.string(FBInk.fbink_version()).decode("ascii")))
@@ -22,19 +54,28 @@ import subprocess
 # Setup the config...
 config = configparser.ConfigParser()
 config.read('config.ini')
-fbink_cfg = ffi.new("FBInkConfig *")
-fbink_cfg.is_centered = True
-fbink_cfg.is_halfway = True
-fbink_cfg.is_quiet = True
 
-fbfd = FBInk.fbink_open()
-FBInk.fbink_init(fbfd, fbink_cfg)
+if preview_mode:
+    initial_model = next(iter(MODEL_SCREENS)) if preview_model == 'all' else preview_model
+    screen_width, screen_height = MODEL_SCREENS[initial_model]
+    fbfd = None
+    fbink_cfg = None
+else:
+    from _fbink import ffi, lib as FBInk
 
-state = ffi.new("FBInkState *")
-FBInk.fbink_get_state(fbink_cfg, state)
+    fbink_cfg = ffi.new("FBInkConfig *")
+    fbink_cfg.is_centered = True
+    fbink_cfg.is_halfway = True
+    fbink_cfg.is_quiet = True
 
-screen_width = state.screen_width
-screen_height = state.screen_height
+    fbfd = FBInk.fbink_open()
+    FBInk.fbink_init(fbfd, fbink_cfg)
+
+    state = ffi.new("FBInkState *")
+    FBInk.fbink_get_state(fbink_cfg, state)
+
+    screen_width = state.screen_width
+    screen_height = state.screen_height
 
 # Create a new image with a white background    
 image = Image.new("L", (screen_width, screen_height), color="white")
@@ -270,7 +311,7 @@ def draw_detail(events_data, date):
 
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
-    if len(sys.argv) > 1:
+    if previous_month or preview_mode:
         text = f"Total: {get_time_format(month_hours, 2)}"
     else:
         text = f"Total: {get_time_format(day_hours, 2)} / {get_time_format(week_hours, 2)} / {get_time_format(month_hours, 2)}"
@@ -313,15 +354,52 @@ def remove_image():
                 print(f"Error deleting image {image_path}: {e}")
 
 def main():
+    global screen_width
+    global screen_height
+    global image
+    global draw
+    global gray_palette
+    global font_palette
+
     try:
         start_time = time.time()
+
+        if preview_mode:
+            file_name = preview_data_file or './data/2024-02.json'
+            events_data = get_file(file_name)
+            if preview_month:
+                date = datetime.strptime(preview_month, '%Y-%m')
+            elif events_data:
+                date = parse_date(events_data[0]['Date']).replace(day=1)
+            else:
+                date = datetime.now().replace(day=1)
+
+            dayMonth = date.strftime('%Y-%m')
+            os.makedirs('./preview', exist_ok=True)
+            models = MODEL_SCREENS if preview_model == 'all' else {preview_model: MODEL_SCREENS[preview_model]}
+
+            for model, (width, height) in models.items():
+                screen_width = width
+                screen_height = height
+                image = Image.new("L", (screen_width, screen_height), color="white")
+                draw = ImageDraw.Draw(image, "L")
+                gray_palette = [item.strip() for item in config['Color']['event_bg'].split(',')]
+                font_palette = [item.strip() for item in config['Color']['event_tx'].split(',')]
+
+                image_name = f'./preview/{model}-{dayMonth}.png'
+                draw_calendar(events_data, date)
+                draw_detail(events_data, date)
+                image.save(image_name)
+                print(f"Preview model: {model} ({screen_width}x{screen_height})")
+                print(f"file_name: {image_name}")
+            return
 
         # set date
         date = datetime.now()
         year = date.year
         month = date.month
 
-        if len(sys.argv) > 1:
+        if previous_month:
             month -= 1
             if month == 0:
                 year -= 1
@@ -332,11 +410,11 @@ def main():
         image_name = f'./image/{dayMonth}.png'
         file_name = f'./data/{dayMonth}.json'
 
-        if check_image(image_name) and len(sys.argv) > 1:
+        if check_image(image_name) and previous_month:
             # when there has last month image, doesn't need to calcute again.
             print(f"file_name: {image_name}")
         else:
-            if len(sys.argv) > 1:
+            if previous_month:
                 # 上個月的如果重畫就重新計算一次，當月不需要判斷是執行的是 copyAnalytics.sh
                 subprocess.run(['./copyAnalytics.sh'])
             # Event data
@@ -359,18 +437,21 @@ def main():
         remove_image()
     except FileNotFoundError as e:
         print('File not found')
-        fbink_cfg.is_halfway = False
-        fbink_cfg.row = -2
+        if not preview_mode:
+            fbink_cfg.is_halfway = False
+            fbink_cfg.row = -2
         # FBInk.fbink_print(fbfd, b"Please run current month calendar first.", fbink_cfg)
         exit(1)
     except Exception as e:
-        fbink_cfg.is_halfway = False
-        fbink_cfg.row = -2
+        if not preview_mode:
+            fbink_cfg.is_halfway = False
+            fbink_cfg.row = -2
         # FBInk.fbink_print(fbfd, b"An error occurred", fbink_cfg)
         print(f'An error occurred: {e}')
         exit(1)
     finally:
-        FBInk.fbink_close(fbfd)
+        if not preview_mode:
+            FBInk.fbink_close(fbfd)
 
 if __name__ == "__main__":
     main()

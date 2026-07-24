@@ -10,24 +10,32 @@ I recommend running "Analyze" once before you connect to the Wi-Fi.
 
 The only way to stop the touch event on Kobo is to shut down the Kobo process, but this leads to a long restart time and is not user-friendly. Therefore, the reading calendar only displays an image cover on the screen; underneath it, Kobo remains active. You need to remember the previous screen and its button placement before opening the calendar. This ensures that when you want to close the calendar, you can simply touch the button to open a fullscreen dialog or book. After that, the screen will refresh, and the calendar will be closed.
 
-** Please note, [v2.3](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v2.3) has only been tested on the **Nia**, and [v3.0](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v3.0) has only been tested on the **Clara BW**.
+**Device compatibility:** Calendar layouts can be previewed at the screen
+resolutions of multiple Kobo models, but a successful preview does not guarantee
+that the full workflow will behave identically on real hardware. Releases from
+[v3.0](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v3.0)
+onward have been verified on a **Clara BW** only; releases up to and including
+[v2.3](https://github.com/hsuan9522/kobo-reading-calendar/releases/tag/v2.3)
+were verified on a **Nia** only. Other models may work, but have not yet been
+tested on a physical device.
 Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
 ![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
 ![real on kobo](https://github.com/hsuan9522/kobo-reading-calendar/blob/master/image/real.jpg)
 
 ## Folder structure
+
 ```
 ├── data // Save the exported data.
 │   ├── YYYY-MM.json // monthly data
 │   ├── fake.json // mock data
-│  
+│
 ├──  fonts // font folder
 │   ├── msjh.ttc // font (Chinese, for example)
-│  
+│
 ├── image // output image
 │   ├── YYYY-MM.png // each month image
-│ 
+│
 ├── config.ini // customizable configurations
 ├── HsKobo.sqlite
 ├── copyAnalytics.sh // calculate reading statistics
@@ -36,17 +44,18 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 ├── readingCalendar // NickelMenu configuration
 ```
 
+- **HsKobo.sqlite**
 
-* **HsKobo.sqlite**
-    > Used for analyzing KoboReader.sqlite and storing data related to AnalyticsEvent and content.
+  > Used for analyzing KoboReader.sqlite and storing data related to AnalyticsEvent and content.
 
         Analytics: Related to the AnalyticsEvent table.
-        
+
         Books: Related to the content table.
 
         TimeInfo: Stores running time and update time.
 
 ## Install:
+
 1. Install [KoboStuff](https://www.mobileread.com/forums/showthread.php?t=225030), find KoboStuff in the threads, download and install it.
 2. Install [NickelMenu](https://pgaskin.net/NickelMenu/)
 3. Python is not included in KoboStuff. You need to use telnet to access Kobo and run `tmux new -s kobo update-kobostuff Python`.
@@ -56,12 +65,14 @@ Before you run it, I suggest that you backup your device first to avoid any pote
    the device. Kobo will install it and restart automatically.
 6. The same package can be used for both a first install and an upgrade.
    Existing reading data and `config.ini` settings are preserved.
+
 ```
 menu_item   :main   :Last Month   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
 menu_item   :main   :This Month   :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
 ```
 
 ## Configuration:
+
 Here are the customizable settings:
 
 ```ini
@@ -82,13 +93,55 @@ font_md = 24
 font_lg = 36
 ```
 
-## TODO:
-* ~~圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片~~ (DONE)
-* ~~支援刪除過往的日曆圖片~~ (DONE)
-* ~~日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了~~ (NO NEED，原本就是用計算的了，所以不用 config)
-* ~~如果 max_event > 4 然後顏色只有四組，看看會不會有問題~~ (DONE)
+## Testing
 
+Generate a preview for a supported Kobo model without FBInk or a connected
+device:
+
+Install the desktop preview dependency:
+
+```sh
+python -m pip install -r requirements-preview.txt
+```
+
+Test commands:
+
+```sh
+python readingCalendar.py --model nia
+```
+
+or
+
+```sh
+python readingCalendar.py --model libra-colour \
+    --data data/2024-02.json \
+    --month 2024-02
+```
+
+Supported model names:
+
+| Model           | Resolution  |
+| --------------- | ----------- |
+| `nia`           | 758 × 1024  |
+| `clara`         | 1072 × 1448 |
+| `libra`         | 1264 × 1680 |
+| `forma`, `sage` | 1440 × 1920 |
+| `elipsa`        | 1404 × 1872 |
+| `all`           | all models  |
+
+The generated images are written to `preview/`.
+
+## TODO:
+
+- ~~圖片檔名改存成 YYYY-MM，這樣當分析資料沒有變化時，可以直接讀取圖片~~ (DONE)
+- ~~支援刪除過往的日曆圖片~~ (DONE)
+- ~~日曆下面的統計，要把列數拉成 config，然後當如果超出幾筆就不要顯示了~~ (NO NEED，原本就是用計算的了，所以不用 config)
+- ~~如果 max_event > 4 然後顏色只有四組，看看會不會有問題~~ (DONE)
 
 ---
 
 <a href="https://www.buymeacoffee.com/hsuan" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 165px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
+```
+
+```

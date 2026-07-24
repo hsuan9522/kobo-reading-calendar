@@ -12,7 +12,6 @@ import time
 import sys
 import os
 import glob
-import subprocess
 
 MODEL_SCREENS = {
     'nia': (758, 1024),
@@ -209,6 +208,7 @@ def draw_calendar(events_data, date):
     for week_num, week in enumerate(cal_data):
         tmp_week_hours = 0
         for day_num, day in enumerate(week):
+            tmp_day_hours = 0
             x = x_start + day_num * rec_width
             y = y_start + week_num * rec_height
 
@@ -229,7 +229,6 @@ def draw_calendar(events_data, date):
             if events_on_day:
                 event_y = event_height + y
 
-                tmp_day_hours = 0
                 for i, event in enumerate(events_on_day):
                     tmp_week_hours += event['TotalMinutesRead']
                     tmp_day_hours += event['TotalMinutesRead']
@@ -494,9 +493,6 @@ def main():
             # when there has last month image, doesn't need to calcute again.
             print(f"file_name: {image_name}")
         else:
-            if previous_month:
-                # 上個月的如果重畫就重新計算一次，當月不需要判斷是執行的是 copyAnalytics.sh
-                subprocess.run(['./copyAnalytics.sh'])
             # Event data
             events_data = get_file(file_name)
             # print(events_data)

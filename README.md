@@ -36,12 +36,24 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 ├── image // output image
 │   ├── YYYY-MM.png // each month image
 │
-├── config.ini // customizable configurations
-├── HsKobo.sqlite
-├── copyAnalytics.sh // calculate reading statistics
-├── readingCalendar.sh // run Python
-├── readingCalendar.py // create reading calendar
-├── readingCalendar // NickelMenu configuration
+.adds/
+├── nm/
+│   ├── readingCalendar // NickelMenu configuration
+│   └── hsBackup // NickelMenu configuration
+└── nickel-hs/
+    ├── sqlite3
+    ├── lib/
+    │   └── libsqlite3.so.0
+    ├── HsKobo.sqlite // created from the template on first use
+    ├── logs/ // created at runtime; each run replaces its component log
+    │   ├── reading-calendar.log
+    │   └── hs-kobo-backup.log
+    ├── backup/ // supplied by hs-kobo-backup
+    └── reading-calendar/
+        ├── config.ini // customizable configurations
+        ├── calculateReadingStatistics.sh // export monthly statistics
+        ├── readingCalendar.sh // coordinate sync, statistics, cache, and display
+        └── readingCalendar.py // create reading calendar
 ```
 
 - **HsKobo.sqlite**
@@ -67,9 +79,34 @@ Before you run it, I suggest that you backup your device first to avoid any pote
    Existing reading data and `config.ini` settings are preserved.
 
 ```
-menu_item   :main   :Last Month   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
-menu_item   :main   :This Month   :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
+menu_item   :main   :Last Month   :cmd_spawn  :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --previous
+menu_item   :main   :This Month   :cmd_spawn      :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --current
 ```
+
+## Uninstall
+
+Connect the Kobo to a computer. Before removing anything, copy the following
+file elsewhere if you want to preserve the backup database:
+
+```text
+.adds/nickel-hs/HsKobo.sqlite
+```
+
+To remove Reading Calendar but keep HS Kobo Backup, manually delete:
+
+```text
+.adds/nickel-hs/reading-calendar/
+.adds/nickel-hs/logs/reading-calendar.log
+.adds/nm/readingCalendar
+```
+
+Keep `.adds/nickel-hs/backup/`, `sqlite3`, `lib/`, `HsKobo.sqlite`, and
+`.adds/nm/hsBackup`, since they belong to the shared backup installation.
+
+To remove both Reading Calendar and HS Kobo Backup, just delete the complete `.adds/nickel-hs/` directory.
+
+Safely eject and restart the Kobo after deleting the files so NickelMenu reloads
+its configuration.
 
 ## Configuration:
 
@@ -130,6 +167,17 @@ Supported model names:
 | `all`           | all models  |
 
 The generated images are written to `preview/`.
+
+The complete local shell workflow can also be tested without FBInk or a Kobo:
+
+```sh
+./readingCalendar.sh --current --dev nia
+./readingCalendar.sh --previous --dev libra
+```
+
+Local mode reads the repository's `HsKobo.sqlite`, uses the computer's
+`sqlite3`, and writes preview images to `preview/`. It does not run the backup
+sync or call FBInk.
 
 ## TODO:
 

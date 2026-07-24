@@ -1,5 +1,9 @@
-menu_item   :main   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev
-menu_item   :main   :當月日曆    :cmd_spawn      :quiet:/mnt/onboard/.adds/utils/analytics/copyAnalytics.sh -cal > /mnt/onboard/.adds/utils/analytics/log 2>&1
+menu_item   :main   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --previous
+chain_failure   :dbg_msg   :無法啟動閱讀日曆，請檢查 .adds/nickel-hs/logs/reading-calendar.log
+menu_item   :main   :當月日曆    :cmd_spawn      :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --current
+chain_failure   :dbg_msg   :無法啟動閱讀日曆，請檢查 .adds/nickel-hs/logs/reading-calendar.log
 
-menu_item   :reader   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh -prev  
-menu_item   :reader   :當月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/utils/analytics/readingCalendar.sh     
+menu_item   :reader   :前月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --previous
+chain_failure   :dbg_msg   :無法啟動閱讀日曆，請檢查 .adds/nickel-hs/logs/reading-calendar.log
+menu_item   :reader   :當月日曆   :cmd_spawn  :quiet:/mnt/onboard/.adds/nickel-hs/reading-calendar/readingCalendar.sh --current
+chain_failure   :dbg_msg   :無法啟動閱讀日曆，請檢查 .adds/nickel-hs/logs/reading-calendar.log

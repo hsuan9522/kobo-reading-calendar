@@ -16,44 +16,22 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v6
 
+      - name: Checkout hs-kobo-backup
+        uses: actions/checkout@v6
+        with:
+          repository: hsuan9522/hs-kobo-backup
+          path: vendor/hs-kobo-backup
+
       - name: Build KoboRoot.tgz
         shell: bash
-        run: |
-          set -euo pipefail
-
-          ARCHIVE_NAME="KoboRoot.tgz"
-          ONBOARD_DIR="package/mnt/onboard"
-          NM_DIR="${ONBOARD_DIR}/.adds/nm"
-          UTILS_DIR="${ONBOARD_DIR}/.adds/utils"
-          ANALYTICS_DIR="${UTILS_DIR}/analytics"
-
-          mkdir -p "${NM_DIR}" "${ANALYTICS_DIR}"
-
-          install -m 755 readingCalendar "${NM_DIR}/readingCalendar"
-          install -m 644 HsKobo.sqlite "${UTILS_DIR}/HsKobo.sqlite.template"
-          install -m 755 copyAnalytics.sh "${ANALYTICS_DIR}/copyAnalytics.sh"
-          install -m 644 readingCalendar.py "${ANALYTICS_DIR}/readingCalendar.py"
-          install -m 755 readingCalendar.sh "${ANALYTICS_DIR}/readingCalendar.sh"
-          install -m 644 config.ini "${ANALYTICS_DIR}/config.ini.default"
-
-          cp -a fonts "${ANALYTICS_DIR}/fonts"
-          install -m 755 sqlite3 "${UTILS_DIR}/sqlite3"
-
-          find package -name ".DS_Store" -delete
-
-          tar -C package \
-            --owner=root --group=root \
-            -czf "${GITHUB_WORKSPACE}/${ARCHIVE_NAME}" \
-            mnt
-
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
+        run: ./build.sh
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            "${ARCHIVE_NAME}" \
+            "dist/KoboRoot.tgz" \
             --verify-tag \
             --generate-notes \
             --title "${GITHUB_REF_NAME}"

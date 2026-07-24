@@ -2,3 +2,13 @@
 dist/
 preview/
 __pycache__/
+*.sqlite-shm
+*.sqlite-wal
+
+# 1. 忽略 /data 資料夾底下的所有內容
+/data/*
+
+# 2. 用驚嘆號 (!) 排除特定檔案，使其不被忽略（加入版本追蹤）
+!/data/2024-01.json
+!/data/2024-02.json
+!/data/fake.json

@@ -23,6 +23,8 @@ MODEL_SCREENS = {
     'elipsa': (1404, 1872),
 }
 
+CLARA_SCREEN = MODEL_SCREENS['clara']
+
 
 def get_option(name):
     if name not in sys.argv:
@@ -81,13 +83,55 @@ else:
 image = Image.new("L", (screen_width, screen_height), color="white")
 draw = ImageDraw.Draw(image, "L")
 
-# Load a font
-# font = ImageFont.load_default()
 font_path = f"./fonts/{config['Font']['font_family']}"
-font = ImageFont.truetype(font_path, int(config['Font']['font_base']))
-font_sm = ImageFont.truetype(font_path, int(config['Font']['font_sm']))
-font_md = ImageFont.truetype(font_path, int(config['Font']['font_md']))
-font_lg = ImageFont.truetype(font_path, int(config['Font']['font_lg']))
+
+
+def scaled(value, scale, minimum=1):
+    return max(minimum, int(round(value * scale)))
+
+
+def configure_layout():
+    global layout
+    global font
+    global font_sm
+    global font_md
+    global font_lg
+
+    scale = min(
+        screen_width / CLARA_SCREEN[0],
+        screen_height / CLARA_SCREEN[1],
+    )
+    layout = {
+        'scale': scale,
+        'margin': scaled(20, scale),
+        'title_y': scaled(100, scale),
+        'calendar_y': scaled(230, scale),
+        'weekday_gap': scaled(40, scale),
+        'cell_extra_height': scaled(30, scale),
+        'event_height': scaled(int(config['General']['event_height']), scale),
+        'detail_gap': scaled(20, scale),
+        'detail_line_height': scaled(40, scale),
+    }
+
+    font = ImageFont.truetype(
+        font_path,
+        scaled(int(config['Font']['font_base']), scale),
+    )
+    font_sm = ImageFont.truetype(
+        font_path,
+        scaled(int(config['Font']['font_sm']), scale),
+    )
+    font_md = ImageFont.truetype(
+        font_path,
+        scaled(int(config['Font']['font_md']), scale),
+    )
+    font_lg = ImageFont.truetype(
+        font_path,
+        scaled(int(config['Font']['font_lg']), scale),
+    )
+
+
+configure_layout()
 
 gray_palette = [item.strip() for item in config['Color']['event_bg'].split(',')]
 font_palette = [item.strip() for item in config['Color']['event_tx'].split(',')]
@@ -131,7 +175,7 @@ def draw_calendar(events_data, date):
     tmp_color = {}
     tmp_total_time = {}
 
-    event_height = int(config['General']['event_height'])
+    event_height = layout['event_height']
     max_count = int(config['General']['max_event'])
     day_map = init_day_map(max_count)
     
@@ -147,19 +191,19 @@ def draw_calendar(events_data, date):
 
     text = f'{current_year}/{current_month}'
     left, top, right, bottom = draw.textbbox((0,0), text, font=font_lg)
-    draw.text((screen_width // 2 - (right - left) // 2, 100), text, font=font_lg, fill="black")
+    draw.text((screen_width // 2 - (right - left) // 2, layout['title_y']), text, font=font_lg, fill="black")
 
     # Define cell size and starting position
-    rec_width = (screen_width - 40) // 7
+    rec_width = (screen_width - layout['margin'] * 2) // 7
     global rec_height
-    rec_height = rec_width + 30
-    x_start = 20
-    y_start = 230
+    rec_height = rec_width + layout['cell_extra_height']
+    x_start = layout['margin']
+    y_start = layout['calendar_y']
 
     # Draw the days of the week
     days_of_week = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     for i, day in enumerate(days_of_week):
-        draw.text((x_start + i * rec_width, y_start - 40), day, font=font_md, fill="black")
+        draw.text((x_start + i * rec_width, y_start - layout['weekday_gap']), day, font=font_md, fill="black")
 
     total_event_count = 0
     for week_num, week in enumerate(cal_data):
@@ -216,14 +260,24 @@ def draw_calendar(events_data, date):
                             draw.rectangle([x , event_y + save_i * event_height + 1, x + rec_width, event_y + (save_i + 1) * event_height], fill=save_color, outline=None)
                             # 覆蓋掉原本的書名及時間
                             title_pos = tmp_position[event_title]['title_pos']
+                            event_right = x + rec_width
+
+                            # A Sunday-to-Monday event starts a new visual
+                            # segment because it cannot continue horizontally
+                            # across calendar rows.
+                            if x < title_pos[0]:
+                                title_pos = (
+                                    x + 2,
+                                    event_y + save_i * event_height,
+                                )
+                                tmp_position[event_title]['title_pos'] = title_pos
+
                             time_format = get_time_format(tmp_total_time[event_title])
                             text = f"{event_book} ({time_format})"
                             left, top, right, bottom = draw.textbbox(title_pos, text, font=font)
-                            if left ==  20 + (rec_width * 6) + 2:
-                                draw.rectangle((left, top , left + rec_width - 3, bottom), fill=save_color)
-                                text = get_text(text, rec_width)
-                            else:
-                                draw.rectangle((left, top, right, bottom), fill=save_color)
+                            available_width = event_right - title_pos[0] - 2
+                            draw.rectangle((left, top, event_right, bottom), fill=save_color)
+                            text = get_text_for_font(text, available_width, font)
                             draw.text(title_pos, text, font=font, fill=font_color)
                         else:
                             # 連續事件，但在上個日期被歸在 +more 裡
@@ -237,7 +291,7 @@ def draw_calendar(events_data, date):
                                 'rect_pos': [x + 1 , event_y + tmp_i * event_height, x - 1 + rec_width, event_y + (tmp_i + 1) * event_height]
                             }
                             text = f"{event_book} ({time_format})"
-                            text = get_text(text, rec_width)
+                            text = get_text_for_font(text, rec_width - 8, font)
                             draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                             draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                             tmp_color[event_title] = event_block_color
@@ -254,7 +308,7 @@ def draw_calendar(events_data, date):
                             'rect_pos': [x + 1 , event_y + tmp_i * event_height + 1, x - 1 + rec_width, event_y + (tmp_i + 1) * event_height]
                         }
                         text = f"{event_book} ({time_format})"
-                        text = get_text(text, rec_width)
+                        text = get_text_for_font(text, rec_width - 8, font)
                         draw.rectangle(tmp_position[event_title]['rect_pos'], fill=event_block_color, outline=None)
                         draw.text(tmp_position[event_title]['title_pos'], text, font=font, fill=font_color)
                         tmp_color[event_title] = event_block_color
@@ -271,25 +325,44 @@ def draw_calendar(events_data, date):
                 week_hours = tmp_week_hours
                 day_hours = tmp_day_hours
 
-def get_text(string, rec_width):
-    i = 0
-    width = font.getlength('.') * 3
-    for char in string:
-        if width < rec_width - 8:
-            i += 1
-            width += font.getlength(char)
+def get_text_for_font(string, width, selected_font):
+    if selected_font.getlength(string) <= width:
+        return string
 
-    return string[:int(i)] + "..."
+    suffix = "..."
+    suffix_width = selected_font.getlength(suffix)
+    current_width = 0
+    result = []
+    for char in string:
+        char_width = selected_font.getlength(char)
+        if current_width + char_width + suffix_width > width:
+            break
+        result.append(char)
+        current_width += char_width
+
+    return ''.join(result) + suffix
 
 
 def draw_detail(events_data, date):
     cal_data = calendar.monthcalendar(date.year, date.month)
     weeks = len(cal_data)
-    x = 20
-    y = 250 + rec_height * weeks
-    title_height = 40
-    max_line = (screen_height - y) // title_height
+    x = layout['margin']
+    y = layout['calendar_y'] + rec_height * weeks + layout['detail_gap']
+    title_height = layout['detail_line_height']
     half_width = screen_width // 2
+    is_clara_layout = (screen_width, screen_height) == CLARA_SCREEN
+
+    if is_clara_layout:
+        max_line = (screen_height - y) // title_height
+        total_y = y - 10 + max_line * title_height
+    else:
+        total_y = screen_height - layout['margin'] - title_height
+        if y > total_y:
+            raise ValueError(
+                f'Calendar layout exceeds the detail area at '
+                f'{screen_width}x{screen_height}'
+            )
+        max_line = max(0, (total_y - y) // title_height)
 
     total_minutes_by_title = {}
     for item in events_data:
@@ -302,20 +375,26 @@ def draw_detail(events_data, date):
     for i, (title, total_minutes) in enumerate(total_minutes_by_title.items()):
         month_hours += total_minutes
         text = f"{title.split('+')[0]}: {get_time_format(total_minutes, 2)}"
+        text = get_text_for_font(text, half_width - layout['margin'] * 2, font_md)
         if i < max_line:
             draw.text((x, y + i * title_height), text, font=font_md, fill="black")
-        elif i < (max_line * 2) - 1:
+        elif not is_clara_layout and max_line > 0 and i < max_line * 2:
+            new_i = i - max_line
+            draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
+        elif is_clara_layout and max_line > 0 and i < (max_line * 2) - 1:
             new_i = (i + 1) % max_line - 1
             if new_i < 0:
                 new_i = max_line - 1
-
             draw.text((x + half_width, y + new_i * title_height), text, font=font_md, fill="black")
 
     if previous_month or preview_mode:
         text = f"Total: {get_time_format(month_hours, 2)}"
     else:
         text = f"Total: {get_time_format(day_hours, 2)} / {get_time_format(week_hours, 2)} / {get_time_format(month_hours, 2)}"
-    draw.text((x + half_width, y - 10 + max_line * title_height), text, font=font_md, fill="black")   
+    text = get_text_for_font(text, half_width - layout['margin'] * 2, font_md)
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font_md)
+    total_y = min(total_y, screen_height - bottom - 2)
+    draw.text((x + half_width, total_y), text, font=font_md, fill="black")
 
 def check_image(name):
     if os.path.exists(name):
@@ -385,6 +464,7 @@ def main():
                 draw = ImageDraw.Draw(image, "L")
                 gray_palette = [item.strip() for item in config['Color']['event_bg'].split(',')]
                 font_palette = [item.strip() for item in config['Color']['event_tx'].split(',')]
+                configure_layout()
 
                 image_name = f'./preview/{model}-{dayMonth}.png'
                 draw_calendar(events_data, date)

@@ -20,7 +20,7 @@ were verified on a **Nia** only. Other models may work, but have not yet been
 tested on a physical device.
 Before you run it, I suggest that you backup your device first to avoid any potential crashes. Additionally, this function is not real-time. You may need to wait for a few minutes for it to execute, or execute it twice or more after closing the book. It also may not run quickly, so please be patient.
 
-![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/2024-03.png)
+![example](https://raw.githubusercontent.com/hsuan9522/kobo-reading-calendar/master/image/preview.png)
 ![real on kobo](https://github.com/hsuan9522/kobo-reading-calendar/blob/master/image/real.jpg)
 
 ## Folder structure

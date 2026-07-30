@@ -83,6 +83,10 @@ image = Image.new("L", (screen_width, screen_height), color="white")
 draw = ImageDraw.Draw(image, "L")
 
 font_path = f"./fonts/{config['Font']['font_family']}"
+if not os.path.exists(font_path) and config['Font']['font_family'] == 'msjh.ttc':
+    # Existing installations preserve config.ini across upgrades. Fall back to
+    # Noto when migrating from the previously bundled Microsoft JhengHei font.
+    font_path = "./fonts/NotoSansCJKtc-Regular.otf"
 
 
 def scaled(value, scale, minimum=1):

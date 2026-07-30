@@ -30,8 +30,9 @@ Before you run it, I suggest that you backup your device first to avoid any pote
 │   ├── YYYY-MM.json // monthly data
 │   ├── fake.json // mock data
 │
-├──  fonts // font folder
-│   ├── msjh.ttc // font (Chinese, for example)
+├── fonts // bundled font and its license
+│   ├── NotoSansCJKtc-Regular.otf
+│   └── OFL.txt
 │
 ├── image // output image
 │   ├── YYYY-MM.png // each month image
@@ -123,12 +124,18 @@ event_bg = #999999, #444444, #BBBBBB, #666666	# Four gray background for events.
 event_tx = #000000, #DDDDDD, #000000, #DDDDDD	# Pair text color with event_bg, e.g., #999999 background with #000000 text.
 
 [Font]
-font_family = msjh.ttc	# File name of the font, which is in the /fonts folder.
-font_sm = 13	# Font sizes for different levels.
-font_base = 20
-font_md = 24
-font_lg = 36
+font_family = NotoSansCJKtc-Regular.otf	# File name of the font in /fonts.
+font_sm = 17	# Font sizes for different levels.
+font_base = 19
+font_md = 22
+font_lg = 34
 ```
+
+The bundled font is
+[Noto Sans CJK Traditional Chinese](https://github.com/notofonts/noto-cjk),
+licensed under the SIL Open Font License 1.1. See `fonts/OFL.txt` for the full
+license text. Existing installations whose preserved `config.ini` still names
+`msjh.ttc` automatically fall back to the bundled Noto font after upgrading.
 
 ## Testing
 

@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - "v*"
+  repository_dispatch:
+    types:
+      - hs-kobo-backup-released
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -15,23 +22,104 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve hs-kobo-backup version
+        id: backup
+        shell: bash
+        env:
+          DISPATCH_BACKUP_TAG: ${{ github.event.client_payload.backup_tag }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "repository_dispatch" ]]; then
+            backup_tag="${DISPATCH_BACKUP_TAG}"
+          else
+            backup_tag=$(tr -d '[:space:]' < HS_KOBO_BACKUP_VERSION)
+          fi
+
+          if [[ ! "${backup_tag}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "Invalid hs-kobo-backup tag: ${backup_tag}" >&2
+            exit 1
+          fi
+
+          echo "tag=${backup_tag}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout hs-kobo-backup
         uses: actions/checkout@v6
         with:
           repository: hsuan9522/hs-kobo-backup
+          ref: ${{ steps.backup.outputs.tag }}
           path: vendor/hs-kobo-backup
 
       - name: Build KoboRoot.tgz
         shell: bash
         run: ./build.sh
 
+      - name: Resolve Calendar release tag
+        id: calendar
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            calendar_tag="${GITHUB_REF_NAME}"
+          else
+            latest_tag=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -n 1)
+            if [[ ! "${latest_tag}" =~ ^v([0-9]+)\.([0-9]+)(\.([0-9]+))?$ ]]; then
+              echo "Cannot determine the latest Calendar version: ${latest_tag}" >&2
+              exit 1
+            fi
+
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[4]:-0}"
+            calendar_tag="v${major}.${minor}.$((patch + 1))"
+
+            if git rev-parse "refs/tags/${calendar_tag}" >/dev/null 2>&1; then
+              echo "Calendar tag already exists: ${calendar_tag}" >&2
+              exit 1
+            fi
+          fi
+
+          echo "tag=${calendar_tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Record hs-kobo-backup version
+        if: github.event_name == 'repository_dispatch'
+        env:
+          BACKUP_TAG: ${{ steps.backup.outputs.tag }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          printf '%s\n' "${BACKUP_TAG}" > HS_KOBO_BACKUP_VERSION
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add HS_KOBO_BACKUP_VERSION
+
+          if git diff --cached --quiet; then
+            echo "HS_KOBO_BACKUP_VERSION already contains ${BACKUP_TAG}." >&2
+            exit 1
+          fi
+
+          git commit -m "[Dependency] Update hs-kobo-backup to ${BACKUP_TAG}"
+          git push origin "HEAD:${DEFAULT_BRANCH}"
+
+      - name: Create Calendar tag
+        if: github.event_name == 'repository_dispatch'
+        env:
+          CALENDAR_TAG: ${{ steps.calendar.outputs.tag }}
+          BACKUP_TAG: ${{ steps.backup.outputs.tag }}
+        run: |
+          git tag -a "${CALENDAR_TAG}" \
+            -m "Release ${CALENDAR_TAG} with hs-kobo-backup ${BACKUP_TAG}"
+          git push origin "${CALENDAR_TAG}"
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          CALENDAR_TAG: ${{ steps.calendar.outputs.tag }}
+          BACKUP_TAG: ${{ steps.backup.outputs.tag }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
+          gh release create "${CALENDAR_TAG}" \
             "dist/KoboRoot.tgz" \
             --verify-tag \
             --generate-notes \
-            --title "${GITHUB_REF_NAME}"
+            --title "${CALENDAR_TAG}" \
+            --notes "Includes hs-kobo-backup ${BACKUP_TAG}."

@@ -51,10 +51,6 @@ jobs:
           ref: ${{ steps.backup.outputs.tag }}
           path: vendor/hs-kobo-backup
 
-      - name: Build KoboRoot.tgz
-        shell: bash
-        run: ./build.sh
-
       - name: Resolve Calendar release tag
         id: calendar
         shell: bash
@@ -80,6 +76,13 @@ jobs:
           fi
 
           echo "tag=${calendar_tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build KoboRoot.tgz
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ steps.calendar.outputs.tag }}
+          BACKUP_VERSION: ${{ steps.backup.outputs.tag }}
+        run: ./build.sh
 
       - name: Record hs-kobo-backup version
         if: github.event_name == 'repository_dispatch'

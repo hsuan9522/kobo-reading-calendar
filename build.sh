@@ -4,6 +4,7 @@ set -eu
 PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 OUTPUT_DIR="$PROJECT_DIR/dist"
 STAGING_DIR=$(mktemp -d)
+PACKAGE_VERSION=${PACKAGE_VERSION:-$(git -C "$PROJECT_DIR" describe --tags --exact-match 2>/dev/null || printf 'dev')}
 
 if [ -z "${BACKUP_SOURCE:-}" ]; then
     if [ -d "$PROJECT_DIR/vendor/hs-kobo-backup" ]; then
@@ -11,6 +12,9 @@ if [ -z "${BACKUP_SOURCE:-}" ]; then
     else
         BACKUP_SOURCE="$PROJECT_DIR/../hs-kobo-backup"
     fi
+fi
+if [ -z "${BACKUP_VERSION:-}" ]; then
+    BACKUP_VERSION=$(git -C "$BACKUP_SOURCE" describe --tags --exact-match 2>/dev/null || tr -d '[:space:]' < "$PROJECT_DIR/HS_KOBO_BACKUP_VERSION")
 fi
 
 cleanup() {
@@ -35,6 +39,8 @@ fi
 
 mkdir -p "$NM_DIR" "$BACKUP_DIR" "$CALENDAR_DIR"
 mkdir -p "$OUTPUT_DIR"
+printf '%s\n' "$BACKUP_VERSION" > "$BACKUP_DIR/VERSION"
+printf '%s\n' "$PACKAGE_VERSION" > "$CALENDAR_DIR/VERSION"
 
 # NickelMenu configuration
 cp -p "$PROJECT_DIR/readingCalendar" "$NM_DIR/"
